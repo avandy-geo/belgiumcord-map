@@ -1,0 +1,3841 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Geoguessr Belgium People Map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Fredoka:wght@600;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #e1e1df;
+        --panel: #ffffff;
+        --panel-2: #f3f2ee;
+        --ink: #18181b;
+        --ink2: #5b5b54;
+        --line: #dfddd4;
+        --accent: #0b4dff;
+        --label: #0b4dff;
+        --halo: rgba(240, 239, 224, 0.95);
+        --fl: #d97706;
+        --br: #7c3aed;
+        --wa: #dc2626;
+        --ab: #475569;
+        --hand:
+          "Baloo 2", "Fredoka", "Arial Rounded MT Bold", system-ui, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          "Inter",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        user-select: none;
+      }
+      [hidden] {
+        display: none !important;
+      }
+
+      #app {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+      }
+
+      header.top {
+        height: 50px;
+        flex-shrink: 0;
+        background: var(--panel);
+        border-bottom: 1px solid var(--line);
+        z-index: 30;
+        display: flex;
+        align-items: center;
+        padding: 0 14px;
+      }
+      .top-in {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+      }
+      .brand {
+        font-weight: 700;
+        font-size: 15.5px;
+        letter-spacing: -0.02em;
+        margin: 0;
+        white-space: nowrap;
+      }
+      .brand span {
+        font-weight: 500;
+        color: var(--ink2);
+      }
+      .pill {
+        background: #eef3ff;
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(11, 77, 255, 0.2);
+        white-space: nowrap;
+      }
+      .sp {
+        flex: 1;
+      }
+
+      .main {
+        display: flex;
+        flex: 1;
+        min-height: 0;
+        position: relative;
+        overflow: hidden;
+      }
+
+      aside.side-left {
+        width: 280px;
+        flex-shrink: 0;
+        background: var(--panel);
+        border-right: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        z-index: 25;
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      aside.side-right {
+        width: 300px;
+        flex-shrink: 0;
+        background: var(--panel);
+        border-left: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        z-index: 25;
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .side-hdr {
+        padding: 10px 12px 8px;
+        border-bottom: 1px solid var(--line);
+        background: var(--panel-2);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--ink2);
+      }
+
+      @media (max-width: 960px) {
+        aside.side-left {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          width: min(86vw, 300px);
+          transform: translateX(-100%);
+          box-shadow: 10px 0 30px rgba(0, 0, 0, 0.16);
+        }
+        aside.side-left.open {
+          transform: translateX(0);
+        }
+        aside.side-right {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          right: 0;
+          width: min(88vw, 320px);
+          transform: translateX(100%);
+          box-shadow: -10px 0 30px rgba(0, 0, 0, 0.16);
+        }
+        aside.side-right.open {
+          transform: translateX(0);
+        }
+      }
+      .scrim {
+        display: none;
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.35);
+        z-index: 20;
+        backdrop-filter: blur(1px);
+      }
+      .scrim.on {
+        display: block;
+      }
+
+      .pane {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+      }
+      .pbody {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+      }
+      .pad {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+      }
+      .foot {
+        border-top: 1px solid var(--line);
+        border-bottom: none;
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        background: var(--panel-2);
+      }
+
+      .searchbox {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--panel-2);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 6px 10px;
+        color: var(--ink2);
+      }
+      .searchbox:focus-within {
+        border-color: var(--accent);
+        background: #fff;
+        box-shadow: 0 0 0 2px rgba(11, 77, 255, 0.14);
+      }
+      .searchbox input {
+        border: none;
+        background: transparent;
+        outline: none;
+        width: 100%;
+        font-size: 13px;
+        color: var(--ink);
+      }
+      .seg {
+        display: flex;
+        background: var(--panel-2);
+        padding: 3px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+      }
+      .seg.small {
+        margin-top: 8px;
+      }
+      .seg button {
+        flex: 1;
+        border: none;
+        background: transparent;
+        padding: 5px 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--ink2);
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .seg button.on {
+        background: var(--panel);
+        color: var(--ink);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+      }
+
+      .filters {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 8px;
+        font-size: 12px;
+      }
+      .filters select {
+        flex: 1;
+        background: var(--panel-2);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 5px 8px;
+        font-size: 12px;
+        color: var(--ink);
+        outline: none;
+      }
+      .chk {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        color: var(--ink2);
+        cursor: pointer;
+        white-space: nowrap;
+        font-weight: 500;
+      }
+
+      .list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 6px;
+      }
+      .list.az-list {
+        padding-top: 0;
+      }
+      .gh {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 10px 5px;
+        font-size: 16px;
+        font-weight: 800;
+        letter-spacing: -0.015em;
+        color: #000000;
+      }
+      .gh .link,
+      .gh span:first-child {
+        color: #000000 !important;
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: 800;
+      }
+      .gh .link:hover {
+        text-decoration: underline;
+        color: #000000;
+      }
+      .gh.az-letter {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: var(--panel);
+        padding-top: 8px;
+        border-bottom: 1px solid var(--line);
+      }
+      .gh span:last-child {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--ink2);
+        background: var(--panel-2);
+        padding: 1px 7px;
+        border-radius: 99px;
+      }
+      .row {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 10px;
+        border: none;
+        background: transparent;
+        border-radius: 8px;
+        cursor: pointer;
+        text-align: left;
+        transition: background 0.12s;
+      }
+      .row:hover {
+        background: var(--panel-2);
+      }
+      .row.on {
+        background: rgba(11, 77, 255, 0.1);
+        outline: 1px solid rgba(11, 77, 255, 0.28);
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 99px;
+        flex-shrink: 0;
+      }
+      .rn {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-width: 0;
+      }
+      .rn b {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--ink);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .rn b.hand {
+        font-family: var(--hand);
+        font-size: 13.5px;
+        color: var(--label);
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+      }
+      .rn small {
+        font-size: 11.5px;
+        color: var(--ink2);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .cnt {
+        background: var(--panel-2);
+        color: var(--ink2);
+        font-size: 11.5px;
+        font-weight: 600;
+        padding: 2px 7px;
+        border-radius: 99px;
+      }
+      .cnt.big {
+        font-size: 13px;
+        padding: 3px 10px;
+        background: rgba(11, 77, 255, 0.1);
+        color: var(--accent);
+      }
+      .empty {
+        padding: 28px 16px;
+        text-align: center;
+        color: var(--ink2);
+        font-size: 13px;
+      }
+
+      .dh {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--panel-2);
+      }
+      .dt {
+        font-weight: 700;
+        font-size: 15px;
+        color: var(--ink);
+      }
+      .ds {
+        font-size: 12px;
+        color: var(--ink2);
+      }
+
+      section#mapwrap {
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+        background: #c6def1;
+        cursor: grab;
+        touch-action: none;
+      }
+      section#mapwrap.panning {
+        cursor: grabbing;
+      }
+      section#mapwrap.placing {
+        cursor: crosshair !important;
+      }
+
+      #world {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1136px;
+        height: 988px;
+        transform-origin: 0 0;
+        will-change: transform;
+        pointer-events: none;
+      }
+      #mapimg {
+        object-fit: fill;
+        display: block;
+        width: 1136px;
+        height: 988px;
+        user-select: none;
+        -webkit-user-drag: none;
+      }
+      #fx {
+        position: absolute;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: 4;
+      }
+      #labs {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 6;
+      }
+
+      .lab {
+        position: absolute;
+        top: 0;
+        left: 0;
+        pointer-events: auto;
+        font-family: var(--hand);
+        font-size: inherit;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        color: var(--label);
+        background: transparent;
+        border: none;
+        padding: 1px 3px;
+        margin: 0;
+        line-height: 0.98;
+        white-space: nowrap;
+        cursor: pointer;
+        border-radius: 4px;
+        text-shadow:
+          -1.3px -1.3px 0 var(--halo),
+          1.3px -1.3px 0 var(--halo),
+          -1.3px 1.3px 0 var(--halo),
+          1.3px 1.3px 0 var(--halo),
+          0px 0px 3px var(--halo);
+        transition:
+          opacity 0.15s,
+          color 0.12s,
+          background-color 0.12s;
+        will-change: transform;
+      }
+      .lab:hover,
+      .lab.hl {
+        color: #0026b3;
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 2px 8px rgba(11, 77, 255, 0.25);
+        z-index: 20;
+      }
+      .lab.sel {
+        color: #ffffff;
+        background: var(--accent);
+        text-shadow: none;
+        padding: 2px 6px;
+        box-shadow: 0 3px 12px rgba(11, 77, 255, 0.45);
+        z-index: 30;
+      }
+      .lab.dim {
+        opacity: 0.22;
+      }
+
+      #edges {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 12;
+        overflow: hidden;
+      }
+      .edge {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 26px;
+        pointer-events: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 0 9px 0 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.95);
+        color: var(--label);
+        border: 1.5px solid rgba(11, 77, 255, 0.4);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.14);
+        font-family: var(--hand);
+        font-weight: 800;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        transition:
+          background 0.15s,
+          border-color 0.15s,
+          box-shadow 0.15s;
+        will-change: transform;
+      }
+      .edge:hover,
+      .edge.sel {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+        box-shadow: 0 4px 14px rgba(11, 77, 255, 0.38);
+        z-index: 15;
+      }
+      .edge .arr {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+      }
+      .edge .nm {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .ctl {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 16;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        background: rgba(255, 255, 255, 0.94);
+        padding: 5px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(6px);
+      }
+
+      .icon-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--ink);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.12s;
+      }
+      .icon-btn:hover {
+        background: var(--panel-2);
+      }
+      .icon-btn.sm {
+        width: 28px;
+        height: 28px;
+      }
+      .icon-btn.toggle[aria-pressed="true"] {
+        background: rgba(11, 77, 255, 0.12);
+        color: var(--accent);
+        border-color: rgba(11, 77, 255, 0.25);
+      }
+      .menu-btn {
+        display: none;
+      }
+      @media (max-width: 960px) {
+        .menu-btn {
+          display: inline-flex;
+        }
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 6px 11px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--ink);
+        cursor: pointer;
+        transition: all 0.12s;
+        white-space: nowrap;
+      }
+      .btn:hover {
+        background: var(--panel-2);
+      }
+      .btn.primary {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+      }
+      .btn.primary:hover {
+        background: #003be0;
+      }
+      .btn.ghost {
+        background: transparent;
+        border-color: transparent;
+        color: var(--ink2);
+      }
+      .btn.ghost:hover {
+        background: var(--panel-2);
+        color: var(--ink);
+      }
+      .btn.danger {
+        background: #dc2626;
+        color: #fff;
+        border-color: #dc2626;
+      }
+      .btn.danger-ghost {
+        background: transparent;
+        border-color: transparent;
+        color: #dc2626;
+      }
+      .btn.danger-ghost:hover {
+        background: #fef2f2;
+      }
+
+      .link,
+      .linkbtn {
+        border: none;
+        background: transparent;
+        padding: 0;
+        color: #000000;
+        font-weight: 700;
+        font-size: inherit;
+        cursor: pointer;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+      .linkbtn {
+        color: #93c5fd;
+        margin-left: 10px;
+        text-decoration: none;
+      }
+
+      #card {
+        position: absolute;
+        bottom: 16px;
+        left: 16px;
+        z-index: 18;
+        width: min(340px, calc(100% - 32px));
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+        padding: 14px;
+        pointer-events: auto;
+      }
+      .card-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .card-name {
+        font-family: var(--hand);
+        font-size: 20px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        color: var(--label);
+        line-height: 1.1;
+      }
+      .card-sub {
+        font-size: 12.5px;
+        color: #000000;
+        font-weight: 600;
+        margin-top: 3px;
+      }
+      .card-sub .link {
+        color: #000000;
+        font-weight: 700;
+        text-decoration-color: #71717a;
+      }
+      .card-sub .link:hover {
+        color: #000000;
+        text-decoration-color: #000000;
+      }
+      .card-loc {
+        font-size: 12.5px;
+        font-weight: 700;
+        color: #000000;
+        margin-top: 4px;
+      }
+      .card-act {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+      }
+      .confirm p {
+        margin: 10px 0 6px;
+        font-size: 13px;
+        color: var(--ink);
+      }
+
+      #banner {
+        position: absolute;
+        top: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 22;
+        background: #18181b;
+        color: #fff;
+        padding: 8px 14px;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 13px;
+        font-weight: 500;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+      }
+
+      .form {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 10px;
+      }
+      .geo-fields {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .form label,
+      .dlg label {
+        font-size: 11.5px;
+        font-weight: 600;
+        color: var(--ink2);
+        margin-top: 4px;
+      }
+      .form input,
+      .dlg input {
+        width: 100%;
+        padding: 7px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: var(--panel-2);
+        font-size: 13px;
+        color: var(--ink);
+        outline: none;
+      }
+      .form input:focus,
+      .dlg input:focus {
+        border-color: var(--accent);
+        background: #fff;
+      }
+      .acwrap {
+        position: relative;
+      }
+      .sug {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 4px);
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        margin: 0;
+        padding: 4px;
+        list-style: none;
+        max-height: 190px;
+        overflow-y: auto;
+        z-index: 50;
+      }
+      .sug li {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 7px 10px;
+        border-radius: 6px;
+        font-size: 12.5px;
+        cursor: pointer;
+      }
+      .sug li small {
+        color: var(--ink2);
+        font-size: 11px;
+      }
+      .sug li.on,
+      .sug li:hover {
+        background: var(--panel-2);
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .row-btns {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+
+      #dlgwrap {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+      .dlg-bg {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(2px);
+      }
+      .dlg {
+        position: relative;
+        width: min(400px, 100%);
+        background: var(--panel);
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        padding: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.22);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .dlg h2 {
+        margin: 0 0 6px;
+        font-size: 17px;
+        font-weight: 700;
+      }
+      .err {
+        color: #dc2626;
+        font-size: 12px;
+        margin: 4px 0 0;
+        font-weight: 500;
+      }
+
+      #toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 70;
+        background: #18181b;
+        color: #fff;
+        padding: 10px 16px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 500;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+        display: flex;
+        align-items: center;
+      }
+      .sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script type="module">
+      "use strict";
+
+      const SUPABASE_URL = "https://isuflpviuigmxxbrqsuc.supabase.co";
+      const SUPABASE_ANON_KEY =
+        "sb_publishable_B491mHk-WJNOq0Rx2Gf5tg_w3gGcQAt";
+      const supabase = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY,
+      );
+
+      // Dimensions: 1136 x 988 px, Equirectangular projection
+      // Bounding Box: N 51.8°, S 49.2°, W 2.2°, E 6.9°
+      const MAPIMG_URL =
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Belgium_location_map.svg";
+      const W = 1136,
+        H = 988;
+      const BE = { cx: 568, cy: 494, w: 1136, h: 988 };
+
+      const BBOX = {
+        top: 51.8,
+        bottom: 49.2,
+        left: 2.2,
+        right: 6.9,
+      };
+
+      const geoX = (lon) =>
+        Math.round(((lon - BBOX.left) / (BBOX.right - BBOX.left)) * W * 10) /
+        10;
+      const geoY = (lat) =>
+        Math.round(((BBOX.top - lat) / (BBOX.top - BBOX.bottom)) * H * 10) / 10;
+
+      const $ = (s, r = document) => r.querySelector(s);
+      const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+      const reduceMotion = matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+
+      const PROV = {
+        ANT: { n: "Antwerp", r: "Flanders" },
+        LIM: { n: "Limburg", r: "Flanders" },
+        OVL: { n: "East Flanders", r: "Flanders" },
+        WVL: { n: "West Flanders", r: "Flanders" },
+        VBR: { n: "Flemish Brabant", r: "Flanders" },
+        BRU: { n: "Brussels", r: "Brussels" },
+        WBR: { n: "Walloon Brabant", r: "Wallonia" },
+        HAI: { n: "Hainaut", r: "Wallonia" },
+        LIE: { n: "Liège", r: "Wallonia" },
+        LUX: { n: "Luxembourg", r: "Wallonia" },
+        NAM: { n: "Namur", r: "Wallonia" },
+      };
+      const PROV_ORDER = [
+        "ANT",
+        "LIM",
+        "OVL",
+        "WVL",
+        "VBR",
+        "BRU",
+        "WBR",
+        "HAI",
+        "LIE",
+        "LUX",
+        "NAM",
+      ];
+      const REGION_VAR = {
+        Flanders: "var(--fl)",
+        Brussels: "var(--br)",
+        Wallonia: "var(--wa)",
+        Abroad: "var(--ab)",
+      };
+
+      // Belgian Municipalities Dataset [Name, Aliases, ProvinceCode, Lat, Lon]
+      const MUNI_GEO = [
+        ["Brugge", "Bruges", "WVL", 51.2093, 3.2247],
+        ["Kortrijk", "Courtrai", "WVL", 50.8279, 3.2649],
+        ["Oostende", "Ostend,Ostende", "WVL", 51.2154, 2.9286],
+        ["Roeselare", "Roulers", "WVL", 50.9446, 3.1259],
+        ["Waregem", "", "WVL", 50.889, 3.4276],
+        ["Ieper", "Ypres", "WVL", 50.8511, 2.8857],
+        ["Menen", "Menin", "WVL", 50.7959, 3.1219],
+        ["Wevelgem", "", "WVL", 50.8083, 3.1819],
+        ["Harelbeke", "", "WVL", 50.8559, 3.3119],
+        ["Izegem", "", "WVL", 50.9167, 3.2167],
+        ["Knokke-Heist", "Knokke", "WVL", 51.3411, 3.2858],
+        ["Zwevegem", "", "WVL", 50.8117, 3.3381],
+        ["Torhout", "", "WVL", 51.0658, 3.1008],
+        ["Zedelgem", "", "WVL", 51.1422, 3.1369],
+        ["Poperinge", "", "WVL", 50.8542, 2.7264],
+        ["Tielt", "", "WVL", 50.9994, 3.3267],
+        ["Blankenberge", "", "WVL", 51.3131, 3.1322],
+        ["Oostkamp", "", "WVL", 51.1544, 3.235],
+        ["Middelkerke", "", "WVL", 51.1853, 2.8208],
+        ["Koksijde", "Coxyde", "WVL", 51.1167, 2.6333],
+        ["Veurne", "Furnes", "WVL", 51.0722, 2.6619],
+        ["Beernem", "", "WVL", 51.1408, 3.3392],
+        ["Diksmuide", "Dixmude", "WVL", 51.0333, 2.8667],
+        ["De Panne", "La Panne", "WVL", 51.0978, 2.5919],
+        ["Nieuwpoort", "Nieuport", "WVL", 51.1303, 2.7514],
+        ["Wervik", "", "WVL", 50.7794, 3.045],
+        ["Bredene", "", "WVL", 51.2367, 2.9739],
+        ["Damme", "", "WVL", 51.2514, 3.2814],
+        ["Jabbeke", "", "WVL", 51.1819, 3.0928],
+        ["Anzegem", "", "WVL", 50.8358, 3.4775],
+        ["Avelgem", "", "WVL", 50.7758, 3.4439],
+        ["Deerlijk", "", "WVL", 50.8531, 3.3536],
+        ["Kuurne", "", "WVL", 50.8519, 3.2839],
+        ["Gent", "Ghent,Gand", "OVL", 51.0543, 3.7174],
+        ["Aalst", "Alost", "OVL", 50.9378, 4.041],
+        ["Sint-Niklaas", "Saint-Nicolas", "OVL", 51.1646, 4.1396],
+        ["Beveren", "", "OVL", 51.2119, 4.2564],
+        ["Dendermonde", "Termonde", "OVL", 51.0255, 4.1019],
+        ["Lokeren", "", "OVL", 51.1039, 3.9933],
+        ["Ninove", "", "OVL", 50.8386, 4.0222],
+        ["Geraardsbergen", "Grammont", "OVL", 50.7719, 3.8825],
+        ["Deinze", "", "OVL", 50.9856, 3.5269],
+        ["Zottegem", "", "OVL", 50.8694, 3.8106],
+        ["Oudenaarde", "Audenarde", "OVL", 50.8442, 3.6083],
+        ["Temse", "Tamise", "OVL", 51.1275, 4.2136],
+        ["Wetteren", "", "OVL", 51.0061, 3.8842],
+        ["Zele", "", "OVL", 51.0669, 4.0406],
+        ["Maldegem", "", "OVL", 51.2089, 3.4464],
+        ["Eeklo", "", "OVL", 51.1856, 3.5639],
+        ["Merelbeke", "", "OVL", 50.9942, 3.7456],
+        ["Lochristi", "", "OVL", 51.0964, 3.8322],
+        ["Evergem", "", "OVL", 51.1114, 3.7069],
+        ["Ronse", "Renaix", "OVL", 50.7458, 3.6008],
+        ["Hamme", "", "OVL", 51.0967, 4.1369],
+        ["Stekene", "", "OVL", 51.2061, 4.04],
+        ["Zelzate", "", "OVL", 51.1986, 3.8092],
+        ["Destelbergen", "", "OVL", 51.0578, 3.7989],
+        ["Aalter", "", "OVL", 51.0858, 3.4478],
+        ["Lebbeke", "", "OVL", 51.0008, 4.1319],
+        ["Buggenhout", "", "OVL", 51.0156, 4.2017],
+        ["Kruibeke", "", "OVL", 51.1706, 4.3125],
+        ["Zulte", "", "OVL", 50.9161, 3.4422],
+        ["Brakel", "", "OVL", 50.7969, 3.7625],
+        ["Antwerpen", "Antwerp,Anvers", "ANT", 51.2194, 4.4025],
+        ["Mechelen", "Malines", "ANT", 51.0259, 4.4775],
+        ["Turnhout", "", "ANT", 51.3227, 4.9447],
+        ["Heist-op-den-Berg", "Heist", "ANT", 51.0758, 4.7289],
+        ["Brasschaat", "", "ANT", 51.2917, 4.4917],
+        ["Geel", "", "ANT", 51.1627, 4.9897],
+        ["Lier", "Lierre", "ANT", 51.1311, 4.5703],
+        ["Mol", "", "ANT", 51.1919, 5.1156],
+        ["Schoten", "", "ANT", 51.2519, 4.5022],
+        ["Kapellen", "", "ANT", 51.3144, 4.4317],
+        ["Herentals", "", "ANT", 51.1767, 4.8325],
+        ["Brecht", "", "ANT", 51.3503, 4.6383],
+        ["Mortsel", "", "ANT", 51.1703, 4.4558],
+        ["Willebroek", "", "ANT", 51.0606, 4.3592],
+        ["Bornem", "", "ANT", 51.0969, 4.2436],
+        ["Westerlo", "", "ANT", 51.0906, 4.9153],
+        ["Edegem", "", "ANT", 51.1558, 4.4453],
+        ["Nijlen", "", "ANT", 51.1608, 4.6694],
+        ["Zoersel", "", "ANT", 51.2683, 4.7128],
+        ["Schilde", "", "ANT", 51.2389, 4.5819],
+        ["Kontich", "", "ANT", 51.1347, 4.4461],
+        ["Balen", "", "ANT", 51.1697, 5.1697],
+        ["Kasterlee", "", "ANT", 51.2408, 4.9675],
+        ["Ranst", "", "ANT", 51.1897, 4.5608],
+        ["Boom", "", "ANT", 51.0875, 4.3669],
+        ["Duffel", "", "ANT", 51.0956, 4.5067],
+        ["Hoogstraten", "", "ANT", 51.4008, 4.7611],
+        ["Essen", "", "ANT", 51.4669, 4.4689],
+        ["Wuustwezel", "", "ANT", 51.3917, 4.5944],
+        ["Kalmthout", "", "ANT", 51.3839, 4.4753],
+        ["Arendonk", "", "ANT", 51.3208, 5.0861],
+        ["Dessel", "", "ANT", 51.2397, 5.1144],
+        ["Retie", "", "ANT", 51.2669, 5.0825],
+        ["Malle", "", "ANT", 51.2989, 4.6919],
+        ["Zandhoven", "", "ANT", 51.2156, 4.6606],
+        ["Puurs-Sint-Amands", "Puurs", "ANT", 51.0747, 4.2797],
+        ["Aartselaar", "", "ANT", 51.1342, 4.3867],
+        ["Boechout", "", "ANT", 51.1603, 4.4922],
+        ["Wommelgem", "", "ANT", 51.2039, 4.5222],
+        ["Lille", "", "ANT", 51.24, 4.825],
+        ["Hasselt", "", "LIM", 50.9307, 5.3325],
+        ["Genk", "", "LIM", 50.965, 5.5008],
+        ["Beringen", "", "LIM", 51.0494, 5.2261],
+        ["Sint-Truiden", "Saint-Trond", "LIM", 50.8167, 5.1833],
+        ["Lommel", "", "LIM", 51.2306, 5.3136],
+        ["Tongeren", "Tongres", "LIM", 50.7806, 5.4647],
+        ["Maasmechelen", "", "LIM", 50.9647, 5.6961],
+        ["Pelt", "Overpelt,Neerpelt", "LIM", 51.2136, 5.4256],
+        ["Bilzen", "", "LIM", 50.8717, 5.5178],
+        ["Heusden-Zolder", "Heusden,Zolder", "LIM", 51.0369, 5.2914],
+        ["Lanaken", "", "LIM", 50.8931, 5.6517],
+        ["Houthalen-Helchteren", "Houthalen", "LIM", 51.0319, 5.3742],
+        ["Bree", "", "LIM", 51.1419, 5.5969],
+        ["Maaseik", "", "LIM", 51.095, 5.7869],
+        ["Zonhoven", "", "LIM", 50.9897, 5.3669],
+        ["Leopoldsburg", "Bourg-Léopold", "LIM", 51.1189, 5.2575],
+        ["Tessenderlo", "", "LIM", 51.0683, 5.0889],
+        ["Peer", "", "LIM", 51.1336, 5.4525],
+        ["Dilsen-Stokkem", "Dilsen", "LIM", 51.0358, 5.7244],
+        ["Diepenbeek", "", "LIM", 50.9078, 5.4192],
+        ["Lummen", "", "LIM", 50.9875, 5.1908],
+        ["Alken", "", "LIM", 50.8764, 5.3075],
+        ["Riemst", "", "LIM", 50.8108, 5.5994],
+        ["Bocholt", "", "LIM", 51.1731, 5.5797],
+        ["Kinrooi", "", "LIM", 51.1447, 5.7417],
+        ["Hamont-Achel", "Hamont", "LIM", 51.2528, 5.5453],
+        ["Borgloon", "Looz", "LIM", 50.8028, 5.3436],
+        ["Brussel", "Brussels,Bruxelles", "BRU", 50.8503, 4.3517],
+        ["Schaarbeek", "Schaerbeek", "BRU", 50.8676, 4.3737],
+        ["Anderlecht", "", "BRU", 50.8364, 4.3081],
+        ["Elsene", "Ixelles", "BRU", 50.8333, 4.3667],
+        ["Ukkel", "Uccle", "BRU", 50.8036, 4.3339],
+        ["Sint-Jans-Molenbeek", "Molenbeek", "BRU", 50.8547, 4.3386],
+        ["Vorst", "Forest", "BRU", 50.8117, 4.3181],
+        [
+          "Sint-Lambrechts-Woluwe",
+          "Woluwe-Saint-Lambert",
+          "BRU",
+          50.8428,
+          4.4264,
+        ],
+        ["Etterbeek", "", "BRU", 50.8361, 4.3861],
+        ["Jette", "", "BRU", 50.8758, 4.3244],
+        ["Evere", "", "BRU", 50.8719, 4.4033],
+        ["Oudergem", "Auderghem", "BRU", 50.8172, 4.4269],
+        ["Leuven", "Louvain", "VBR", 50.8798, 4.7005],
+        ["Vilvoorde", "Vilvorde", "VBR", 50.9281, 4.4244],
+        ["Halle", "Hal", "VBR", 50.7339, 4.2345],
+        ["Dilbeek", "", "VBR", 50.848, 4.2597],
+        ["Zaventem", "", "VBR", 50.8837, 4.4714],
+        ["Grimbergen", "", "VBR", 50.9336, 4.3722],
+        ["Tienen", "Tirlemont", "VBR", 50.8074, 4.9381],
+        ["Asse", "", "VBR", 50.9102, 4.1983],
+        ["Sint-Pieters-Leeuw", "Leeuw-Saint-Pierre", "VBR", 50.7791, 4.2435],
+        ["Aarschot", "", "VBR", 50.985, 4.8333],
+        ["Overijse", "", "VBR", 50.7743, 4.5348],
+        ["Meise", "", "VBR", 50.9389, 4.3264],
+        ["Tervuren", "", "VBR", 50.824, 4.514],
+        ["Diest", "", "VBR", 50.985, 5.0508],
+        ["Herent", "", "VBR", 50.9089, 4.6714],
+        ["Kortenberg", "", "VBR", 50.8886, 4.5425],
+        ["Beersel", "", "VBR", 50.7661, 4.3008],
+        ["Ternat", "", "VBR", 50.8669, 4.1669],
+        ["Haacht", "", "VBR", 50.9769, 4.6378],
+        ["Tremelo", "", "VBR", 50.9908, 4.7042],
+        ["Keerbergen", "", "VBR", 51.0033, 4.6322],
+        ["Rotselaar", "", "VBR", 50.9517, 4.7114],
+        ["Bierbeek", "", "VBR", 50.8286, 4.7594],
+        ["Oud-Heverlee", "", "VBR", 50.8364, 4.6619],
+        ["Hoeilaart", "", "VBR", 50.7675, 4.4722],
+        ["Kraainem", "", "VBR", 50.8622, 4.4694],
+        ["Wezembeek-Oppem", "", "VBR", 50.8406, 4.4947],
+        ["Wemmel", "", "VBR", 50.9083, 4.305],
+        ["Merchtem", "", "VBR", 50.9556, 4.2328],
+        ["Opwijk", "", "VBR", 50.9686, 4.1897],
+        ["Londerzeel", "", "VBR", 51.0033, 4.3028],
+        ["Zemst", "", "VBR", 50.9839, 4.4608],
+        ["Boortmeerbeek", "", "VBR", 50.9794, 4.5736],
+        ["Scherpenheuvel-Zichem", "Scherpenheuvel", "VBR", 50.9806, 4.9756],
+        ["Landen", "", "VBR", 50.7539, 5.0811],
+        ["Zoutleeuw", "Léau", "VBR", 50.8331, 5.1039],
+        ["Liedekerke", "", "VBR", 50.871, 4.084],
+        ["Wavre", "Waver", "WBR", 50.7172, 4.611],
+        [
+          "Braine-l’Alleud",
+          "Eigenbrakel,Braine-l-Alleud",
+          "WBR",
+          50.6836,
+          4.3678,
+        ],
+        [
+          "Ottignies-Louvain-la-Neuve",
+          "Louvain-la-Neuve,Ottignies",
+          "WBR",
+          50.6681,
+          4.6119,
+        ],
+        ["Nivelles", "Nijvel", "WBR", 50.5978, 4.3285],
+        ["Waterloo", "", "WBR", 50.7147, 4.3991],
+        ["Tubize", "Tubeke", "WBR", 50.6908, 4.2014],
+        ["Rixensart", "", "WBR", 50.7122, 4.5256],
+        ["Jodoigne", "Geldenaken", "WBR", 50.7253, 4.8686],
+        ["Genappe", "Genepiën", "WBR", 50.6119, 4.4517],
+        ["La Hulpe", "Terhulpen", "WBR", 50.7311, 4.4872],
+        ["Lasne", "", "WBR", 50.6875, 4.4836],
+        ["Braine-le-Château", "Kasteelbrakel", "WBR", 50.6822, 4.2678],
+        ["Court-Saint-Étienne", "", "WBR", 50.6442, 4.5683],
+        ["Chaumont-Gistoux", "", "WBR", 50.6797, 4.7219],
+        ["Grez-Doiceau", "Graven", "WBR", 50.7389, 4.6967],
+        ["Rebecq", "", "WBR", 50.6647, 4.1408],
+        ["Perwez", "Perwijs", "WBR", 50.6231, 4.8139],
+        ["Orp-Jauche", "", "WBR", 50.7028, 4.9961],
+        ["Incourt", "", "WBR", 50.6975, 4.7936],
+        ["Villers-la-Ville", "", "WBR", 50.58, 4.5317],
+        ["Charleroi", "", "HAI", 50.4114, 4.4444],
+        ["Tournai", "Doornik", "HAI", 50.6056, 3.3878],
+        ["Mons", "Bergen", "HAI", 50.4542, 3.9523],
+        ["La Louvière", "", "HAI", 50.4833, 4.1833],
+        ["Mouscron", "Moeskroen", "HAI", 50.7417, 3.2189],
+        ["Châtelet", "", "HAI", 50.4042, 4.5269],
+        ["Binche", "", "HAI", 50.4131, 4.165],
+        ["Courcelles", "", "HAI", 50.4633, 4.3739],
+        ["Ath", "Aat", "HAI", 50.6308, 3.7783],
+        ["Soignies", "Zinnik", "HAI", 50.5794, 4.07],
+        ["Manage", "", "HAI", 50.505, 4.2344],
+        ["Boussu", "", "HAI", 50.4358, 3.7961],
+        ["Saint-Ghislain", "", "HAI", 50.4489, 3.8183],
+        ["Fontaine-l’Évêque", "", "HAI", 50.4128, 4.3236],
+        ["Frameries", "", "HAI", 50.4072, 3.8964],
+        ["Colfontaine", "", "HAI", 50.405, 3.8508],
+        ["Lessines", "Lessen", "HAI", 50.7119, 3.8322],
+        ["Pont-à-Celles", "", "HAI", 50.5108, 4.3644],
+        ["Enghien", "Edingen", "HAI", 50.6922, 4.0389],
+        ["Liège", "Luik", "LIE", 50.6326, 5.5797],
+        ["Seraing", "", "LIE", 50.5967, 5.5083],
+        ["Verviers", "", "LIE", 50.5908, 5.8647],
+        ["Herstal", "", "LIE", 50.6625, 5.6322],
+        ["Ans", "", "LIE", 50.6631, 5.5222],
+        ["Flémalle", "", "LIE", 50.6, 5.4667],
+        ["Oupeye", "Oupeye", "LIE", 50.7103, 5.6481],
+        ["Saint-Nicolas", "Sint-Nicolaas", "LIE", 50.6272, 5.5342],
+        ["Grace-Hollogne", "", "LIE", 50.6433, 5.4853],
+        ["Huy", "Hoei", "LIE", 50.5186, 5.2411],
+        ["Waremme", "Borgworm", "LIE", 50.6975, 5.2536],
+        ["Amay", "", "LIE", 50.5481, 5.3183],
+        ["Visé", "Wezet", "LIE", 50.735, 5.6961],
+        ["Hannut", "Hannuit", "LIE", 50.6728, 5.0806],
+        ["Eupen", "", "LIE", 50.6306, 6.0319],
+        ["Sprimont", "", "LIE", 50.5069, 5.6636],
+        ["Spa", "", "LIE", 50.4908, 5.8647],
+        ["Aywaille", "", "LIE", 50.4722, 5.6744],
+        ["Malmedy", "", "LIE", 50.4267, 6.0286],
+        ["Kelmis", "La Calamine", "LIE", 50.7139, 6.0125],
+        ["Namur", "Namen", "NAM", 50.4669, 4.8675],
+        ["Gembloux", "Gembloers", "NAM", 50.56, 4.6931],
+        ["Andenne", "", "NAM", 50.4903, 5.0975],
+        ["Sambreville", "", "NAM", 50.4358, 4.6186],
+        ["Fosses-la-Ville", "", "NAM", 50.3953, 4.6969],
+        ["Ciney", "", "NAM", 50.2975, 5.1017],
+        ["Eghezée", "", "NAM", 50.5881, 4.9256],
+        ["Profondeville", "", "NAM", 50.3786, 4.8697],
+        ["Anhée", "", "NAM", 50.3153, 4.8778],
+        ["Arlon", "Aarlen", "LUX", 49.6833, 5.8167],
+        ["Marche-en-Famenne", "", "LUX", 50.2269, 5.3444],
+        ["Aubange", "", "LUX", 49.5667, 5.8056],
+        ["Bastogne", "Bastenaken", "LUX", 50.0033, 5.7183],
+        ["Virton", "", "LUX", 49.5667, 5.5333],
+        ["Libramont-Chevigny", "Libramont", "LUX", 49.9208, 5.4267],
+        ["Neufchâteau", "", "LUX", 49.8394, 5.435],
+        ["Vielsalm", "", "LUX", 50.2828, 5.915],
+        ["Mont-Saint-Guibert", "", "WBR", 50.635, 4.611],
+        ["Walhain", "", "WBR", 50.626, 4.698],
+        ["Beauvechain", "", "WBR", 50.781, 4.772],
+        ["Ramillies", "", "WBR", 50.633, 4.902],
+        ["Hélécine", "Helecine", "WBR", 50.748, 4.986],
+        ["Ittre", "", "WBR", 50.644, 4.264],
+        ["Chastre", "", "WBR", 50.608, 4.641],
+        ["Braine-le-Comte", "s-Gravenbrakel", "HAI", 50.609, 4.139],
+        ["Leuze-en-Hainaut", "", "HAI", 50.599, 3.622],
+        ["Péruwelz", "Peruwelz", "HAI", 50.508, 3.593],
+        ["Bernissart", "", "HAI", 50.474, 3.648],
+        ["Antoing", "", "HAI", 50.567, 3.449],
+        ["Chimay", "", "HAI", 50.048, 4.317],
+        ["Thuin", "", "HAI", 50.34, 4.286],
+        ["Erquelinnes", "", "HAI", 50.306, 4.112],
+        ["Lobbes", "", "HAI", 50.347, 4.267],
+        ["Morlanwelz", "", "HAI", 50.455, 4.245],
+        ["Chapelle-lez-Herlaimont", "", "HAI", 50.472, 4.282],
+        ["Farciennes", "", "HAI", 50.43, 4.542],
+        ["Aiseau-Presles", "", "HAI", 50.411, 4.586],
+        ["Gerpinnes", "", "HAI", 50.337, 4.527],
+        ["Fleurus", "", "HAI", 50.483, 4.551],
+        ["Jumet", "", "HAI", 50.443, 4.437],
+        ["Gilly", "", "HAI", 50.421, 4.488],
+        ["Jurbise", "", "HAI", 50.532, 3.909],
+        ["Quévy", "Quevy", "HAI", 50.369, 3.935],
+        ["Dour", "", "HAI", 50.395, 3.778],
+        ["Quiévrain", "Quievrain", "HAI", 50.407, 3.683],
+        ["Hensies", "", "HAI", 50.433, 3.684],
+        ["Estinnes", "", "HAI", 50.41, 4.104],
+        ["Rumes", "", "HAI", 50.554, 3.305],
+        ["Herve", "", "LIE", 50.64, 5.793],
+        ["Blegny", "", "LIE", 50.673, 5.725],
+        ["Fléron", "Fleron", "LIE", 50.616, 5.681],
+        ["Chaudfontaine", "", "LIE", 50.582, 5.637],
+        ["Trooz", "", "LIE", 50.57, 5.693],
+        ["Beyne-Heusay", "", "LIE", 50.622, 5.668],
+        ["Juprelle", "", "LIE", 50.708, 5.531],
+        ["Bassenge", "", "LIE", 50.758, 5.609],
+        ["Dalhem", "", "LIE", 50.713, 5.728],
+        ["Grâce-Hollogne", "Grace-Hollogne", "LIE", 50.643, 5.485],
+        ["Awans", "", "LIE", 50.667, 5.463],
+        ["Saint-Georges-sur-Meuse", "", "LIE", 50.6, 5.358],
+        ["Verlaine", "", "LIE", 50.607, 5.317],
+        ["Wanze", "", "LIE", 50.534, 5.209],
+        ["Marchin", "", "LIE", 50.482, 5.242],
+        ["Modave", "", "LIE", 50.445, 5.296],
+        ["Clavier", "", "LIE", 50.401, 5.365],
+        ["Ferrières", "Ferrieres", "LIE", 50.401, 5.611],
+        ["Comblain-au-Pont", "", "LIE", 50.475, 5.577],
+        ["Ouffet", "", "LIE", 50.438, 5.466],
+        ["Limbourg", "", "LIE", 50.612, 5.941],
+        ["Theux", "", "LIE", 50.534, 5.812],
+        ["Jalhay", "", "LIE", 50.559, 5.967],
+        ["Stavelot", "", "LIE", 50.395, 5.931],
+        ["Waimes", "", "LIE", 50.414, 6.112],
+        ["Burg-Reuland", "", "LIE", 50.196, 6.136],
+        ["Amel", "Amblève", "LIE", 50.353, 6.167],
+        ["Butgenbach", "", "LIE", 50.426, 6.206],
+        ["Raeren", "", "LIE", 50.676, 6.115],
+        ["Walcourt", "", "NAM", 50.254, 4.438],
+        ["Florennes", "", "NAM", 50.252, 4.606],
+        ["Philippeville", "", "NAM", 50.196, 4.544],
+        ["Couvin", "", "NAM", 50.052, 4.495],
+        ["Viroinval", "", "NAM", 50.074, 4.552],
+        ["Dinant", "", "NAM", 50.261, 4.912],
+        ["Rochefort", "", "NAM", 50.163, 5.222],
+        ["Beauraing", "", "NAM", 50.11, 4.956],
+        ["Gedinne", "", "NAM", 49.98, 4.937],
+        ["Bièvre", "Bievre", "NAM", 49.941, 5.016],
+        ["Vresse-sur-Semois", "", "NAM", 49.871, 4.936],
+        ["Hastière", "Hastiere", "NAM", 50.217, 4.825],
+        ["Onhaye", "", "NAM", 50.241, 4.84],
+        ["Hamois", "", "NAM", 50.34, 5.158],
+        ["Somme-Leuze", "", "NAM", 50.336, 5.368],
+        ["Ohey", "", "NAM", 50.436, 5.123],
+        ["Gesves", "", "NAM", 50.402, 5.074],
+        ["Durbuy", "", "LUX", 50.353, 5.457],
+        ["Hotton", "", "LUX", 50.268, 5.446],
+        ["La Roche-en-Ardenne", "", "LUX", 50.183, 5.576],
+        ["Houffalize", "", "LUX", 50.132, 5.789],
+        ["Gouvy", "", "LUX", 50.187, 5.94],
+        ["Manhay", "", "LUX", 50.292, 5.675],
+        ["Érezée", "Erezee", "LUX", 50.293, 5.557],
+        ["Saint-Hubert", "", "LUX", 50.026, 5.374],
+        ["Tellin", "", "LUX", 50.082, 5.216],
+        ["Wellin", "", "LUX", 50.081, 5.114],
+        ["Paliseul", "", "LUX", 49.904, 5.136],
+        ["Bertrix", "", "LUX", 49.855, 5.255],
+        ["Florenville", "", "LUX", 49.7, 5.308],
+        ["Chiny", "", "LUX", 49.739, 5.341],
+        ["Étalle", "Etalle", "LUX", 49.674, 5.6],
+        ["Tintigny", "", "LUX", 49.683, 5.514],
+        ["Léglise", "Leglise", "LUX", 49.799, 5.536],
+        ["Fauvillers", "", "LUX", 49.851, 5.665],
+        ["Vaux-sur-Sûre", "Vaux-sur-Sure", "LUX", 49.911, 5.577],
+      ];
+      const norm = (s) =>
+        String(s || "")
+          .normalize("NFD")
+          .replace(/[̀-ͯ]/g, "")
+          .toLowerCase()
+          .replace(/[-'’_.]/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      function parseGeoInputs(latValue, lonValue) {
+        const latText = String(latValue ?? "").trim(),
+          lonText = String(lonValue ?? "").trim();
+        if (!latText && !lonText) return { value: null, error: null };
+        if (!latText || !lonText)
+          return { value: null, error: "Enter both latitude and longitude." };
+        const lat = Number(latText),
+          lon = Number(lonText);
+        if (!Number.isFinite(lat) || lat < -90 || lat > 90)
+          return { value: null, error: "Latitude must be between -90 and 90." };
+        if (!Number.isFinite(lon) || lon < -180 || lon > 180)
+          return {
+            value: null,
+            error: "Longitude must be between -180 and 180.",
+          };
+        return { value: { lat, lon }, error: null };
+      }
+      const hasGeoCoordinates = (p) =>
+        p &&
+        p.lat != null &&
+        p.lon != null &&
+        p.lat !== "" &&
+        p.lon !== "" &&
+        Number.isFinite(Number(p.lat)) &&
+        Number.isFinite(Number(p.lon)) &&
+        Number(p.lat) >= -90 &&
+        Number(p.lat) <= 90 &&
+        Number(p.lon) >= -180 &&
+        Number(p.lon) <= 180;
+      const MUNI = MUNI_GEO.map((r, i) => ({
+        i,
+        n: r[0],
+        al: r[1] ? r[1].split(",") : [],
+        p: r[2],
+        lat: r[3],
+        lon: r[4],
+        x: geoX(r[4]),
+        y: geoY(r[3]),
+        k: norm([r[0]].concat(r[1] ? r[1].split(",") : []).join(" ")),
+      }));
+      const muniByName = new Map(MUNI.map((m) => [m.n, m]));
+      // Convert an image-space map point back to geography using the existing
+      // Belgium projection, doesnt change the projection or map alignment.
+      function imageToGeo(x, y) {
+        return {
+          lat: BBOX.top - (y / H) * (BBOX.top - BBOX.bottom),
+          lon: BBOX.left + (x / W) * (BBOX.right - BBOX.left),
+        };
+      }
+      function haversineKm(aLat, aLon, bLat, bLon) {
+        const rad = (v) => (v * Math.PI) / 180;
+        const dLat = rad(bLat - aLat),
+          dLon = rad(bLon - aLon);
+        const q =
+          Math.sin(dLat / 2) ** 2 +
+          Math.cos(rad(aLat)) * Math.cos(rad(bLat)) * Math.sin(dLon / 2) ** 2;
+        return 6371 * 2 * Math.atan2(Math.sqrt(q), Math.sqrt(1 - q));
+      }
+      function nearestMunicipalityAt(x, y) {
+        if (
+          !Number.isFinite(x) ||
+          !Number.isFinite(y) ||
+          x < 0 ||
+          y < 0 ||
+          x > W ||
+          y > H
+        )
+          return null;
+        const point = imageToGeo(x, y);
+        let nearest = null,
+          nearestDistance = Infinity;
+        for (const m of MUNI) {
+          const distance = haversineKm(point.lat, point.lon, m.lat, m.lon);
+          if (distance < nearestDistance) {
+            nearest = m;
+            nearestDistance = distance;
+          }
+        }
+        return nearest;
+      }
+      function placementForBelgianMapPoint(x, y, existingLocation = "") {
+        const nearest = nearestMunicipalityAt(x, y);
+        if (!nearest)
+          return {
+            x: Math.round(x * 10) / 10,
+            y: Math.round(y * 10) / 10,
+            m: "",
+            lat: null,
+            lon: null,
+            loc: existingLocation || "",
+          };
+        return {
+          x: nearest.x,
+          y: nearest.y,
+          m: nearest.n,
+          lat: null,
+          lon: null,
+          loc: existingLocation || "",
+        };
+      }
+      function isBelgianCountryName(country) {
+        return ["belgium", "belgie", "belgique", "be"].includes(norm(country));
+      }
+      function isInternationalCityCountry(location, municipalityPicked) {
+        const text = String(location || "").trim();
+        if (!text) return false;
+        // With no Belgian municipality selected, any entered City / Country value
+        // means the person is abroad. If a Belgian municipality is still selected,
+        // an explicit non-Belgian country in a comma-separated City, Country value
+        // takes priority (also lets older incorrectly placed entries be corrected).
+        const parts = text
+          .split(",")
+          .map((part) => part.trim())
+          .filter(Boolean);
+        if (parts.length >= 2)
+          return !isBelgianCountryName(parts[parts.length - 1]);
+        return !municipalityPicked;
+      }
+
+      function h(tag, props, ...kids) {
+        const e = document.createElement(tag);
+        for (const k in props || {}) {
+          const v = props[k];
+          if (v == null || v === false) continue;
+          if (k === "class") e.className = v;
+          else if (k === "text") e.textContent = v;
+          else if (k.startsWith("on") && typeof v === "function")
+            e.addEventListener(k.slice(2), v);
+          else e.setAttribute(k, v === true ? "" : v);
+        }
+        for (const c of kids.flat()) {
+          if (c == null || c === false) continue;
+          e.append(c.nodeType ? c : document.createTextNode(c));
+        }
+        return e;
+      }
+      const svgIcon = (d, sz = 18) => {
+        const s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        s.setAttribute("viewBox", "0 0 24 24");
+        s.setAttribute("width", sz);
+        s.setAttribute("height", sz);
+        s.setAttribute("aria-hidden", "true");
+        s.setAttribute("fill", "none");
+        s.setAttribute("stroke", "currentColor");
+        s.setAttribute("stroke-width", "2");
+        s.setAttribute("stroke-linecap", "round");
+        s.setAttribute("stroke-linejoin", "round");
+        const p = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "path",
+        );
+        p.setAttribute("d", d);
+        s.append(p);
+        return s;
+      };
+      const ICON = {
+        plus: "M12 5v14M5 12h14",
+        minus: "M5 12h14",
+        home: "M4 11l8-7 8 7M6 10v10h12V10",
+        close: "M6 6l12 12M18 6L6 18",
+        back: "M15 5l-7 7 7 7",
+        menu: "M4 7h16M4 12h16M4 17h16",
+        pin: "M12 21s-6-5.6-6-10a6 6 0 1112 0c0 4.4-6 10-6 10zM12 11.5h.01",
+        town: "M5 20V9l7-5 7 5v11M9 20v-6h6v6",
+        edit: "M4 20h4l10-10-4-4L4 16v4zM13 7l4 4",
+        trash: "M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13",
+        arrow: "M4 12h14M13 6l6 6-6 6",
+        search: "M11 18a7 7 0 100-14 7 7 0 000 14zM20 20l-4-4",
+        lock: "M12 11v-2a4 4 0 10-8 0v2M5 11h14v10H5z",
+        logout:
+          "M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1",
+      };
+
+      /*state*/
+      let people = [];
+      let isAdmin = false;
+
+      const newId = () => {
+        let max = 0;
+        for (const p of people) {
+          if (p.id && String(p.id).startsWith("p")) {
+            const num = parseInt(String(p.id).substring(1), 10);
+            if (!isNaN(num) && num > max) max = num;
+          }
+        }
+        return "p" + String(max + 1).padStart(3, "0");
+      };
+
+      // Original UI State for lists
+      const ui = {
+        sub: "prov",
+        detail: null,
+        group: "az",
+        qPeople: "",
+        qMuni: "",
+        qDetail: "",
+        onlyWith: false,
+        provFilter: "",
+        towns: true,
+      };
+      let selId = null,
+        hoverId = null,
+        placing = null,
+        cardMode = "view";
+
+      const byId = (id) => people.find((p) => p.id === id);
+      const muniOf = (p) => {
+        if (!p || !p.m) return null;
+        return (
+          muniByName.get(p.m) ||
+          MUNI.find(
+            (m) =>
+              norm(m.n) === norm(p.m) ||
+              m.al.some((a) => norm(a) === norm(p.m)),
+          ) ||
+          null
+        );
+      };
+      // Belgian locations continue to use the existing municipality dataset unchanged.
+      // International locations are projected with the same map transform using saved lat/lon.
+      // Legacy manually placed pins still fall back to their existing x/y values.
+      function mapPosition(p) {
+        if (!p) return null;
+        const m = muniOf(p);
+        if (m) return { x: m.x, y: m.y };
+        if (hasGeoCoordinates(p))
+          return { x: geoX(Number(p.lon)), y: geoY(Number(p.lat)) };
+        if (p.x == null || p.y == null || p.x === "" || p.y === "") return null;
+        const x = Number(p.x),
+          y = Number(p.y);
+        return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : null;
+      }
+      const provOf = (p) => {
+        const m = muniOf(p);
+        return m ? m.p : null;
+      };
+      const regionOf = (p) => {
+        const k = provOf(p);
+        return k ? PROV[k].r : "Abroad";
+      };
+      const isOutsideBelgium = (p) => !muniOf(p);
+      const placeText = (p) => {
+        const m = muniOf(p);
+        // Keep a person's locality attached to the town name, before the province separator.
+        if (m)
+          return p.loc
+            ? `${m.n} (${p.loc}) · ${PROV[m.p].n}`
+            : `${m.n} · ${PROV[m.p].n}`;
+        return p.loc ? p.loc : "Outside Belgium";
+      };
+      const sortName = (a, b) =>
+        (a.n || "").localeCompare(b.n || "", undefined, {
+          sensitivity: "base",
+        });
+      const countBy = (fn) => {
+        const c = new Map();
+        for (const p of people) {
+          const k = fn(p);
+          if (k) c.set(k, (c.get(k) || 0) + 1);
+        }
+        return c;
+      };
+
+      /*build DOM*/
+      const app = $("#app");
+      const mapImgEl = h("img", {
+        id: "mapimg",
+        src: MAPIMG_URL,
+        width: W,
+        height: H,
+        alt: "Map of Belgium",
+        draggable: "false",
+      });
+      mapImgEl.onerror = () => {
+        mapImgEl.onerror = null;
+        mapImgEl.src =
+          'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="960" height="835" viewBox="0 0 960 835"><rect width="960" height="835" fill="%23c6def1"/><rect x="150" y="80" width="670" height="640" rx="120" fill="%23ecebe0" stroke="%23777" stroke-width="4"/><text x="480" y="420" font-family="sans-serif" font-size="28" fill="%23999" text-anchor="middle">Belgium</text></svg>';
+      };
+
+      app.append(
+        h(
+          "header",
+          { class: "top" },
+          h(
+            "div",
+            { class: "top-in" },
+            h(
+              "button",
+              {
+                class: "icon-btn menu-btn",
+                id: "btnMenu",
+                "aria-label": "Show names and places",
+              },
+              svgIcon(ICON.menu),
+            ),
+            h(
+              "h1",
+              { class: "brand" },
+              "Geoguessr Belgium ",
+              h("span", { text: "People Map" }),
+            ),
+            h("span", { class: "pill", id: "count", text: "0 people" }),
+            h("span", { class: "sp" }),
+            h(
+              "button",
+              { class: "btn primary", id: "btnAdd", hidden: true },
+              svgIcon(ICON.plus, 16),
+              " Add person",
+            ),
+            h(
+              "button",
+              { class: "btn ghost", id: "btnAuth" },
+              svgIcon(ICON.lock, 16),
+              " Edit Mode",
+            ),
+            h(
+              "button",
+              { class: "btn ghost", id: "btnLogout", hidden: true },
+              svgIcon(ICON.logout, 16),
+              " Log out",
+            ),
+          ),
+        ),
+        h(
+          "div",
+          { class: "main" },
+          h(
+            "aside",
+            { id: "sideL", class: "side-left" },
+            h("div", { class: "side-hdr" }, h("span", { text: "People" })),
+            h("div", { class: "pane", id: "panePeople" }),
+          ),
+          h("div", { class: "scrim", id: "scrim" }),
+          h(
+            "section",
+            { id: "mapwrap", "aria-label": "Map of Belgium" },
+            h("div", { id: "world" }, mapImgEl),
+            h("canvas", { id: "fx" }),
+            h("div", { id: "labs" }),
+            h("div", { id: "edges" }),
+            h(
+              "div",
+              { class: "ctl" },
+              h(
+                "button",
+                {
+                  class: "icon-btn",
+                  id: "zin",
+                  "aria-label": "Zoom in",
+                  title: "Zoom in",
+                },
+                svgIcon(ICON.plus),
+              ),
+              h(
+                "button",
+                {
+                  class: "icon-btn",
+                  id: "zout",
+                  "aria-label": "Zoom out",
+                  title: "Zoom out",
+                },
+                svgIcon(ICON.minus),
+              ),
+              h(
+                "button",
+                {
+                  class: "icon-btn",
+                  id: "zfit",
+                  "aria-label": "Show all of Belgium",
+                  title: "Show all of Belgium",
+                },
+                svgIcon(ICON.home),
+              ),
+              h(
+                "button",
+                {
+                  class: "icon-btn toggle",
+                  id: "ztown",
+                  "aria-label": "Show municipality names",
+                  "aria-pressed": "true",
+                  title: "Municipality names",
+                },
+                svgIcon(ICON.town),
+              ),
+            ),
+            h("div", { id: "banner", hidden: true }),
+            h("div", {
+              id: "card",
+              hidden: true,
+              onclick: (e) => e.stopPropagation(),
+            }),
+          ),
+          h(
+            "aside",
+            { id: "sideR", class: "side-right" },
+            h(
+              "div",
+              { class: "side-hdr" },
+              h("span", { text: "Places & Municipalities" }),
+            ),
+            h("div", { class: "pane", id: "paneDetail", hidden: true }),
+            h("div", { class: "pane", id: "panePlaces" }),
+          ),
+        ),
+        h("div", { id: "toast", hidden: true }),
+        h("div", { id: "dlgwrap", hidden: true }),
+      );
+
+      const mapEl = $("#mapwrap"),
+        world = $("#world"),
+        fx = $("#fx"),
+        labsEl = $("#labs"),
+        edgesEl = $("#edges"),
+        card = $("#card");
+      const fctx = fx.getContext("2d");
+
+      let toastTimer = 0;
+      function toast(msg, action) {
+        const t = $("#toast");
+        t.replaceChildren(h("span", { text: msg }));
+        if (action)
+          t.append(
+            h("button", {
+              class: "linkbtn",
+              text: action.label,
+              onclick: () => {
+                clearTimeout(toastTimer);
+                t.hidden = true;
+                action.fn();
+              },
+            }),
+          );
+        t.hidden = false;
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(
+          () => {
+            t.hidden = true;
+          },
+          action ? 7000 : 3200,
+        );
+      }
+
+      /*view (pan / zoom)*/
+      let cw = 0,
+        ch = 0,
+        fit = 1,
+        dpr = 1;
+      const view = { z: 1, x: 0, y: 0 };
+      let anim = 0,
+        raf = 0;
+      const schedule = () => {
+        if (!raf) raf = requestAnimationFrame(render);
+      };
+      const computeFit = () => Math.max(cw / W, ch / H);
+      function fitView() {
+        fit = computeFit();
+        view.z = fit;
+        view.x = cw / 2 - BE.cx * fit;
+        view.y = ch / 2 - BE.cy * fit;
+      }
+      function clampView() {
+        fit = computeFit();
+        view.z = clamp(view.z, fit, fit * 18);
+        const minX = cw - W * view.z,
+          maxX = 0;
+        const minY = ch - H * view.z,
+          maxY = 0;
+        view.x = Math.min(maxX, Math.max(minX, view.x));
+        view.y = Math.min(maxY, Math.max(minY, view.y));
+      }
+      function measure() {
+        const r = mapEl.getBoundingClientRect();
+        const oldW = cw,
+          oldFit = fit,
+          c = oldW
+            ? {
+                x: (cw / 2 - view.x) / view.z,
+                y: (ch / 2 - view.y) / view.z,
+                zr: view.z / oldFit,
+              }
+            : null;
+        cw = r.width;
+        ch = r.height;
+        dpr = window.devicePixelRatio || 1;
+        fx.width = Math.round(cw * dpr);
+        fx.height = Math.round(ch * dpr);
+        fx.style.width = cw + "px";
+        fx.style.height = ch + "px";
+        if (c) {
+          fit = computeFit();
+          view.z = c.zr * fit;
+          view.x = cw / 2 - c.x * view.z;
+          view.y = ch / 2 - c.y * view.z;
+          clampView();
+        } else fitView();
+        schedule();
+      }
+      function animateTo(t, ms = 480) {
+        cancelAnimationFrame(anim);
+        const s = { z: view.z, x: view.x, y: view.y };
+        if (reduceMotion || ms === 0) {
+          Object.assign(view, t);
+          clampView();
+          schedule();
+          return;
+        }
+        const t0 = performance.now();
+        const step = (now) => {
+          const k = clamp((now - t0) / ms, 0, 1),
+            e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+          const z = s.z * Math.pow(t.z / s.z, e);
+          const cx0 = (cw / 2 - s.x) / s.z,
+            cy0 = (ch / 2 - s.y) / s.z,
+            cx1 = (cw / 2 - t.x) / t.z,
+            cy1 = (ch / 2 - t.y) / t.z;
+          const cx = cx0 + (cx1 - cx0) * e,
+            cy = cy0 + (cy1 - cy0) * e;
+          view.z = z;
+          view.x = cw / 2 - cx * z;
+          view.y = ch / 2 - cy * z;
+          clampView();
+          schedule();
+          if (k < 1) anim = requestAnimationFrame(step);
+        };
+        anim = requestAnimationFrame(step);
+      }
+      function flyTo(ix, iy, zr) {
+        const z = fit * zr;
+        animateTo({ z, x: cw / 2 - ix * z, y: ch / 2 - iy * z });
+      }
+      function fitBounds(x0, y0, x1, y1, pad = 0.35) {
+        const bw = Math.max(x1 - x0, 24),
+          bh = Math.max(y1 - y0, 24);
+        const z = Math.min(
+          cw / (bw * (1 + pad)),
+          ch / (bh * (1 + pad)),
+          fit * 12,
+        );
+        const cx = (x0 + x1) / 2,
+          cy = (y0 + y1) / 2;
+        animateTo({ z, x: cw / 2 - cx * z, y: ch / 2 - cy * z });
+      }
+      function zoomAt(px, py, f) {
+        const z0 = view.z,
+          z1 = clamp(z0 * f, fit, fit * 18),
+          k = z1 / z0;
+        view.x = px - (px - view.x) * k;
+        view.y = py - (py - view.y) * k;
+        view.z = z1;
+        clampView();
+        schedule();
+      }
+      function stepZoom(f) {
+        const z = clamp(view.z * f, fit, fit * 18);
+        animateTo(
+          {
+            z,
+            x: cw / 2 - ((cw / 2 - view.x) / view.z) * z,
+            y: ch / 2 - ((ch / 2 - view.y) / view.z) * z,
+          },
+          260,
+        );
+      }
+      const toImg = (px, py) => ({
+        x: (px - view.x) / view.z,
+        y: (py - view.y) / view.z,
+      });
+
+      const ptrs = new Map();
+      let drag = null,
+        pinch = null,
+        moved = false,
+        suppress = false;
+      mapEl.addEventListener("pointerdown", (e) => {
+        if (e.target.closest(".ctl,#card,.edge,#banner")) return;
+        cancelAnimationFrame(anim);
+        ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        moved = false;
+        if (ptrs.size === 1)
+          drag = { sx: e.clientX, sy: e.clientY, vx: view.x, vy: view.y };
+        else if (ptrs.size === 2) {
+          const [a, b] = [...ptrs.values()];
+          const r = mapEl.getBoundingClientRect();
+          pinch = {
+            d: Math.hypot(a.x - b.x, a.y - b.y) || 1,
+            z: view.z,
+            cx: (a.x + b.x) / 2 - r.left,
+            cy: (a.y + b.y) / 2 - r.top,
+            vx: view.x,
+            vy: view.y,
+          };
+          drag = null;
+          moved = true;
+        }
+      });
+      mapEl.addEventListener("pointermove", (e) => {
+        if (!ptrs.has(e.pointerId)) return;
+        ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (pinch && ptrs.size >= 2) {
+          const [a, b] = [...ptrs.values()];
+          const r = mapEl.getBoundingClientRect();
+          const d = Math.hypot(a.x - b.x, a.y - b.y) || 1,
+            nz = clamp((pinch.z * d) / pinch.d, fit, fit * 18);
+          const ix = (pinch.cx - pinch.vx) / pinch.z,
+            iy = (pinch.cy - pinch.vy) / pinch.z;
+          const ccx = (a.x + b.x) / 2 - r.left,
+            ccy = (a.y + b.y) / 2 - r.top;
+          view.z = nz;
+          view.x = ccx - ix * nz;
+          view.y = ccy - iy * nz;
+          clampView();
+          schedule();
+        } else if (drag) {
+          const dx = e.clientX - drag.sx,
+            dy = e.clientY - drag.sy;
+          if (!moved && Math.hypot(dx, dy) > 5) {
+            moved = true;
+            try {
+              mapEl.setPointerCapture(e.pointerId);
+            } catch (_) {}
+            mapEl.classList.add("panning");
+          }
+          if (moved) {
+            view.x = drag.vx + dx;
+            view.y = drag.vy + dy;
+            clampView();
+            schedule();
+          }
+        }
+      });
+      const endPtr = (e) => {
+        if (!ptrs.has(e.pointerId)) return;
+        ptrs.delete(e.pointerId);
+        if (ptrs.size < 2) pinch = null;
+        if (ptrs.size === 1) {
+          const [p] = [...ptrs.values()];
+          drag = { sx: p.x, sy: p.y, vx: view.x, vy: view.y };
+        }
+        if (ptrs.size === 0) {
+          drag = null;
+          mapEl.classList.remove("panning");
+          if (moved) {
+            suppress = true;
+            setTimeout(() => {
+              suppress = false;
+            }, 0);
+          }
+        }
+      };
+      mapEl.addEventListener("pointerup", endPtr);
+      mapEl.addEventListener("pointercancel", endPtr);
+      mapEl.addEventListener(
+        "wheel",
+        (e) => {
+          e.preventDefault();
+          cancelAnimationFrame(anim);
+          const r = mapEl.getBoundingClientRect(),
+            k = e.ctrlKey ? 0.01 : 0.0016;
+          zoomAt(
+            e.clientX - r.left,
+            e.clientY - r.top,
+            Math.exp(-e.deltaY * (e.deltaMode === 1 ? 16 : 1) * k),
+          );
+        },
+        { passive: false },
+      );
+      mapEl.addEventListener("dblclick", (e) => {
+        if (e.target.closest(".lab,.ctl,#card,.edge") || placing) return;
+        const r = mapEl.getBoundingClientRect(),
+          p = toImg(e.clientX - r.left, e.clientY - r.top),
+          z = clamp(view.z * 2, fit, fit * 18);
+        animateTo(
+          {
+            z,
+            x: e.clientX - r.left - p.x * z,
+            y: e.clientY - r.top - p.y * z,
+          },
+          300,
+        );
+      });
+      mapEl.addEventListener("click", (e) => {
+        if (suppress) return;
+        if (placing) {
+          if (e.target.closest(".ctl,#banner,#card")) return;
+          const r = mapEl.getBoundingClientRect(),
+            p = toImg(e.clientX - r.left, e.clientY - r.top);
+          const cb = placing.cb;
+          endPlacing();
+          cb(p.x, p.y);
+          return;
+        }
+        if (!e.target.closest(".lab,.ctl,#card,.edge")) {
+          const r = mapEl.getBoundingClientRect();
+          const point = toImg(e.clientX - r.left, e.clientY - r.top);
+          const nearest = nearestMunicipalityAt(point.x, point.y);
+          if (nearest) {
+            openDetail({ t: "prov", k: nearest.p });
+            return;
+          }
+          if (selId) select(null);
+        }
+      });
+      $("#zin").onclick = () => stepZoom(1.7);
+      $("#zout").onclick = () => stepZoom(1 / 1.7);
+      $("#zfit").onclick = () => {
+        ui.detail = null;
+        paintLabels();
+        renderRightSide();
+        const z = fit;
+        animateTo({ z, x: cw / 2 - BE.cx * z, y: ch / 2 - BE.cy * z });
+      };
+      $("#ztown").onclick = (e) => {
+        ui.towns = !ui.towns;
+        e.currentTarget.setAttribute("aria-pressed", String(ui.towns));
+        schedule();
+      };
+
+      /*labels*/
+      const labels = new Map(),
+        chips = new Map();
+      function syncLabels() {
+        const ids = new Set(people.map((p) => p.id));
+        for (const [id, el] of labels)
+          if (!ids.has(id)) {
+            el.remove();
+            labels.delete(id);
+          }
+        for (const [id, el] of chips)
+          if (!ids.has(id)) {
+            el.remove();
+            chips.delete(id);
+          }
+        for (const p of people) {
+          let el = labels.get(p.id);
+          if (!el) {
+            el = h("button", {
+              class: "lab",
+              type: "button",
+              onclick: (e) => {
+                if (suppress) return;
+                e.stopPropagation();
+                select(p.id, { fly: false });
+              },
+              onpointerenter: () => {
+                hoverId = p.id;
+                paintLabels();
+              },
+              onpointerleave: () => {
+                hoverId = null;
+                paintLabels();
+              },
+            });
+            labsEl.append(el);
+            labels.set(p.id, el);
+          }
+          if (el.textContent !== p.n) el.textContent = p.n;
+          el.setAttribute("aria-label", `${p.n}, ${placeText(p)}`);
+        }
+      }
+      function paintLabels() {
+        const dimFn = ui.detail
+          ? ui.detail.t === "prov"
+            ? (p) => provOf(p) !== ui.detail.k
+            : (p) => p.m !== ui.detail.k
+          : null;
+        for (const p of people) {
+          const el = labels.get(p.id);
+          if (!el) continue;
+          el.classList.toggle("sel", p.id === selId);
+          el.classList.toggle("hl", p.id === hoverId && p.id !== selId);
+          el.classList.toggle("dim", !!dimFn && dimFn(p) && p.id !== selId);
+        }
+        schedule();
+      }
+
+      /*render*/
+      function render() {
+        raf = 0;
+        world.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.z})`;
+        const zr = view.z / fit,
+          fs = clamp(11.8 * Math.pow(zr, 0.15), 11.5, 14.5);
+        labsEl.style.fontSize = fs + "px";
+        const vis = [],
+          off = [];
+
+        // Keep person labels close to their location while zoomed out, then ease
+        // them to the normal readable clearance by the city-name zoom threshold.
+        // The clearance is measured from the nearest edge of the label to the dot.
+        const cityNameZoom = 3.5;
+        const zoomProgress = clamp((zr - 1) / (cityNameZoom - 1), 0, 1);
+        const edgeGap = 1.5 + (5 - 1.5) * zoomProgress;
+        const labelStep = fs + 2;
+        const sideCounts = new Map();
+        for (const p of people) {
+          const m = muniOf(p);
+          const position = mapPosition(p);
+          if (!position) continue; // Never feed missing/invalid coordinates into edge-arrow math.
+          let ix = position.x,
+            iy = position.y,
+            anchor = "below";
+
+          if (m) {
+            // Alternate from below first, so a town with one person always has
+            // that person's name underneath its town marker. Odd groups have
+            // one extra label below; the two sides stay as balanced as possible.
+            const idx = sideCounts.get(m.n) || 0;
+            sideCounts.set(m.n, idx + 1);
+            const below = idx % 2 === 0;
+            const rank = Math.floor(idx / 2);
+            anchor = below ? "below" : "above";
+            const screenOffset = edgeGap + rank * labelStep;
+            iy = m.y + (below ? screenOffset : -screenOffset) / view.z;
+          } else {
+            // Standalone / international pins use the same zoom-responsive
+            // clearance and below-the-dot default as single-person towns.
+            iy = position.y + edgeGap / view.z;
+          }
+
+          const sx = ix * view.z + view.x,
+            sy = iy * view.z + view.y;
+          if (!Number.isFinite(sx) || !Number.isFinite(sy)) continue;
+          const o = { p, sx, sy, cx: sx, cy: sy, anchor };
+          const inside = sx >= 0 && sx <= cw && sy >= 0 && sy <= ch;
+
+          if (inside) vis.push(o);
+          else off.push(o);
+        }
+
+        const shown = new Set();
+        for (const o of vis) {
+          const el = labels.get(o.p.id);
+          if (!el) continue;
+          const verticalAnchor = o.anchor === "above" ? "-100%" : "0";
+          el.style.display = "";
+          el.style.transform = `translate(${o.cx.toFixed(1)}px,${o.cy.toFixed(1)}px) translate(-50%,${verticalAnchor})`;
+          shown.add(o.p.id);
+        }
+        for (const p of people) {
+          if (!shown.has(p.id)) {
+            const el = labels.get(p.id);
+            if (el) el.style.display = "none";
+          }
+        }
+
+        drawFx(zr);
+        updateEdges(off);
+      }
+
+      function drawFx(zr) {
+        const c = fctx;
+        c.setTransform(dpr, 0, 0, dpr, 0, 0);
+        c.clearRect(0, 0, cw, ch);
+        const tx = (m) => m.x * view.z + view.x,
+          ty = (m) => m.y * view.z + view.y;
+        const detailProv =
+          ui.detail && ui.detail.t === "prov" ? ui.detail.k : null;
+        const detailMuni =
+          ui.detail && ui.detail.t === "muni"
+            ? muniByName.get(ui.detail.k)
+            : null;
+
+        if (detailProv) {
+          c.fillStyle = "rgba(11, 77, 255, 0.4)";
+          for (const m of MUNI)
+            if (m.p === detailProv) {
+              const x = tx(m),
+                y = ty(m);
+              if (x < -5 || y < -5 || x > cw + 5 || y > ch + 5) continue;
+              c.beginPath();
+              c.arc(x, y, clamp(2 + zr * 0.25, 2.5, 5), 0, 7);
+              c.fill();
+            }
+        }
+        if (ui.towns && zr >= 2.4) {
+          const drawn = [],
+            withPeople = new Set(people.map((p) => p.m));
+          const list = MUNI.filter((m) => {
+            const x = tx(m),
+              y = ty(m);
+            return x > -30 && y > -10 && x < cw + 30 && y < ch + 10;
+          });
+          list.sort(
+            (a, b) =>
+              (withPeople.has(b.n) ? 1 : 0) - (withPeople.has(a.n) ? 1 : 0),
+          );
+          c.font = `500 11px system-ui, sans-serif`;
+          c.textBaseline = "middle";
+          c.textAlign = "left";
+          for (const m of list) {
+            const x = tx(m),
+              y = ty(m);
+            c.fillStyle = "#5b5b54";
+            c.beginPath();
+            c.arc(x, y, 2.5, 0, 7);
+            c.fill();
+            if (zr >= 3.5) {
+              const w = c.measureText(m.n).width,
+                r = { x0: x + 5, y0: y - 7, x1: x + 5 + w, y1: y + 7 };
+              if (
+                drawn.some(
+                  (d) =>
+                    r.x0 < d.x1 && r.x1 > d.x0 && r.y0 < d.y1 && r.y1 > d.y0,
+                )
+              )
+                continue;
+              drawn.push(r);
+              c.lineWidth = 3;
+              c.strokeStyle = "rgba(255,255,255,0.85)";
+              c.strokeText(m.n, x + 5, y);
+              c.fillText(m.n, x + 5, y);
+            }
+          }
+        }
+        if (detailMuni) {
+          const x = tx(detailMuni),
+            y = ty(detailMuni);
+          c.strokeStyle = "#0b4dff";
+          c.lineWidth = 2;
+          c.beginPath();
+          c.arc(x, y, 9, 0, 7);
+          c.stroke();
+          c.fillStyle = "#0b4dff";
+          c.beginPath();
+          c.arc(x, y, 3, 0, 7);
+          c.fill();
+          c.font = `600 12px system-ui, sans-serif`;
+          c.textBaseline = "middle";
+          c.textAlign = "left";
+          c.lineWidth = 4;
+          c.strokeStyle = "rgba(255,255,255,0.9)";
+          c.strokeText(detailMuni.n, x + 14, y);
+          c.fillText(detailMuni.n, x + 14, y);
+        }
+      }
+
+      /*off-screen indicators*/
+      function chipFor(p) {
+        let el = chips.get(p.id);
+        if (!el) {
+          el = h(
+            "button",
+            {
+              class: "edge",
+              type: "button",
+              onclick: () => select(p.id, { fly: true }),
+            },
+            h("span", { class: "arr" }, svgIcon(ICON.arrow, 14)),
+            h("span", { class: "nm" }),
+          );
+          edgesEl.append(el);
+          chips.set(p.id, el);
+        }
+        const nm = el.querySelector(".nm");
+        if (nm.textContent !== p.n) nm.textContent = p.n;
+        return el;
+      }
+      function updateEdges(off) {
+        const used = new Set();
+        const cx = cw / 2,
+          cy = ch / 2,
+          m = 12;
+        for (const o of off) {
+          const dx = o.sx - cx,
+            dy = o.sy - cy;
+          if (
+            !Number.isFinite(dx) ||
+            !Number.isFinite(dy) ||
+            (dx === 0 && dy === 0)
+          )
+            continue;
+          const tx = dx === 0 ? Infinity : (cw / 2 - m) / Math.abs(dx);
+          const ty = dy === 0 ? Infinity : (ch / 2 - m) / Math.abs(dy);
+          const t = Math.min(tx, ty);
+          if (!Number.isFinite(t) || t < 0) continue;
+          const ex = cx + dx * t,
+            ey = cy + dy * t;
+          const ang = Math.atan2(dy, dx); // SVG arrow points east at 0°, so this is the correct map bearing.
+
+          const el = chipFor(o.p);
+          used.add(o.p.id);
+          el.style.display = "";
+          const wEst = 34 + o.p.n.length * 7;
+          const px = Math.min(cw - wEst, Math.max(m, ex - wEst / 2));
+          const py = Math.min(ch - 30, Math.max(m, ey - 13));
+
+          el.style.transform = `translate(${px}px,${py}px)`;
+          el.firstChild.style.transform = `rotate(${((ang * 180) / Math.PI).toFixed(0)}deg)`;
+          el.classList.toggle("sel", o.p.id === selId);
+        }
+        for (const [id, el] of chips)
+          if (!used.has(id)) el.style.display = "none";
+      }
+
+      /*selection & card*/
+      function select(id, opts = {}) {
+        selId = id;
+        cardMode = "view";
+        const p = id && byId(id),
+          position = p && mapPosition(p);
+        if (position && opts.fly !== false)
+          flyTo(position.x, position.y, Math.max(view.z / fit, 4.5));
+        if (position && opts.fly === false) {
+          const sx = position.x * view.z + view.x,
+            sy = position.y * view.z + view.y;
+          if (sx < 40 || sy < 40 || sx > cw - 40 || sy > ch - 40)
+            flyTo(position.x, position.y, view.z / fit);
+        }
+        renderCard();
+        paintLabels();
+        renderPeopleList();
+        if (ui.detail) renderDetailList();
+      }
+      function renderCard() {
+        const p = selId && byId(selId);
+        if (!p) {
+          card.hidden = true;
+          card.replaceChildren();
+          schedule();
+          return;
+        }
+        card.hidden = false;
+        const m = muniOf(p);
+        const subNodes = m
+          ? [
+              h("button", {
+                class: "link",
+                text: m.n,
+                onclick: () => openDetail({ t: "muni", k: m.n }),
+              }),
+              " · ",
+              h("button", {
+                class: "link",
+                text: PROV[m.p].n,
+                onclick: () => openDetail({ t: "prov", k: m.p }),
+              }),
+            ]
+          : [h("span", { text: p.loc || "Outside Belgium" })];
+
+        const head = h(
+          "div",
+          { class: "card-head" },
+          h(
+            "div",
+            { class: "card-title" },
+            h("div", { class: "card-name", text: p.n }),
+            h("div", { class: "card-sub" }, ...subNodes),
+            p.loc && m
+              ? h("div", { class: "card-loc", text: `Locality: ${p.loc}` })
+              : null,
+          ),
+          h(
+            "button",
+            {
+              class: "icon-btn sm",
+              "aria-label": "Close",
+              onclick: () => select(null),
+            },
+            svgIcon(ICON.close, 16),
+          ),
+        );
+
+        const act = h("div", { class: "card-act" });
+        const position = mapPosition(p);
+        if (position)
+          act.append(
+            h(
+              "button",
+              {
+                class: "btn",
+                onclick: () =>
+                  flyTo(position.x, position.y, Math.max(view.z / fit, 6)),
+              },
+              svgIcon(ICON.pin, 16),
+              " Zoom to",
+            ),
+          );
+
+        if (isAdmin) {
+          act.append(
+            h(
+              "button",
+              {
+                class: "btn",
+                onclick: () => {
+                  cardMode = "edit";
+                  renderCard();
+                },
+              },
+              svgIcon(ICON.edit, 16),
+              " Edit",
+            ),
+          );
+          act.append(
+            h(
+              "button",
+              {
+                class: "btn danger-ghost",
+                onclick: () => {
+                  cardMode = "remove";
+                  renderCard();
+                },
+              },
+              svgIcon(ICON.trash, 16),
+              " Remove",
+            ),
+          );
+        }
+
+        if (cardMode === "edit" && isAdmin) {
+          card.replaceChildren(head, editForm(p));
+          schedule();
+          return;
+        }
+        if (cardMode === "remove" && isAdmin) {
+          card.replaceChildren(
+            head,
+            h(
+              "div",
+              { class: "confirm" },
+              h("p", { text: `Remove ${p.n} from the map?` }),
+              h(
+                "div",
+                { class: "row-btns" },
+                h("button", {
+                  class: "btn danger",
+                  text: "Remove",
+                  onclick: () => removePerson(p.id),
+                }),
+                h("button", {
+                  class: "btn",
+                  text: "Keep",
+                  onclick: () => {
+                    cardMode = "view";
+                    renderCard();
+                  },
+                }),
+              ),
+            ),
+          );
+          schedule();
+          return;
+        }
+        card.replaceChildren(head, act);
+        schedule();
+      }
+
+      function editForm(p) {
+        const nameIn = h("input", {
+          type: "text",
+          value: p.n,
+          maxlength: "40",
+          autocomplete: "off",
+        });
+        const m = muniOf(p);
+        const muniIn = h("input", {
+          type: "text",
+          value: m ? m.n : p.m || "",
+          placeholder: "Belgian municipality (leave empty for abroad)",
+          autocomplete: "off",
+        });
+        const locIn = h("input", {
+          type: "text",
+          value: p.loc || "",
+          placeholder: "City, Country (e.g. Ulft, Netherlands)",
+          autocomplete: "off",
+        });
+        const latIn = h("input", {
+          type: "number",
+          step: "any",
+          value: p.lat == null ? "" : String(p.lat),
+          placeholder: "e.g. 51.8910",
+        });
+        const lonIn = h("input", {
+          type: "number",
+          step: "any",
+          value: p.lon == null ? "" : String(p.lon),
+          placeholder: "e.g. 6.3843",
+        });
+        const geoFields = h(
+          "div",
+          { class: "geo-fields", hidden: true },
+          h("label", { text: "Latitude" }),
+          latIn,
+          h("label", { text: "Longitude" }),
+          lonIn,
+        );
+        const sug = h("ul", { class: "sug", hidden: true });
+        let picked = m;
+        const placePinBtn = h(
+          "button",
+          {
+            class: "btn",
+            type: "button",
+            onclick: () => {
+              const current = byId(p.id) || p;
+              select(null);
+              startPlacing(`Click the map to reposition ${p.n}.`, (nx, ny) => {
+                const placement = placementForBelgianMapPoint(
+                  nx,
+                  ny,
+                  muniOf(current) ? current.loc : "",
+                );
+                update(p.id, placement);
+                select(p.id, { fly: false });
+                toast(
+                  placement.m
+                    ? `Updated position for ${p.n} near ${placement.m}`
+                    : `Updated position for ${p.n}`,
+                );
+              });
+            },
+          },
+          svgIcon(ICON.pin, 14),
+          " Place pin on map",
+        );
+        const syncGeoVisibility = () => {
+          const international = isInternationalCityCountry(locIn.value, picked);
+          geoFields.hidden = !international;
+          placePinBtn.hidden = international;
+        };
+        autocomplete(muniIn, sug, (mm) => {
+          picked = mm;
+          syncGeoVisibility();
+        });
+        muniIn.addEventListener("input", syncGeoVisibility);
+        locIn.addEventListener("input", syncGeoVisibility);
+        syncGeoVisibility();
+
+        const save = () => {
+          const n = nameIn.value.trim();
+          if (!n) return;
+          const typed = norm(muniIn.value);
+          if (typed && (!picked || norm(picked.n) !== typed)) {
+            const exact = MUNI.find(
+              (q) => norm(q.n) === typed || q.al.some((a) => norm(a) === typed),
+            );
+            if (exact) picked = exact;
+            else {
+              toast(
+                "Unknown Belgian municipality. Leave this empty for an international city.",
+              );
+              return;
+            }
+          }
+          if (!typed) picked = null;
+
+          const geo = parseGeoInputs(latIn.value, lonIn.value);
+          if (geo.error) {
+            toast(geo.error);
+            return;
+          }
+          const loc = locIn.value.trim();
+          const international = isInternationalCityCountry(loc, picked);
+          const patch = { n, m: picked ? picked.n : "", loc };
+
+          if (international) {
+            if (!geo.value && !hasGeoCoordinates(p)) {
+              toast(
+                "Enter latitude and longitude for this international city.",
+              );
+              latIn.focus();
+              return;
+            }
+            const coords = geo.value || {
+              lat: Number(p.lat),
+              lon: Number(p.lon),
+            };
+            patch.m = "";
+            patch.lat = coords.lat;
+            patch.lon = coords.lon;
+            patch.x = Math.round(geoX(coords.lon) * 10) / 10;
+            patch.y = Math.round(geoY(coords.lat) * 10) / 10;
+          } else if (picked) {
+            if (!m || picked.n !== m.n) {
+              patch.x = picked.x;
+              patch.y = picked.y;
+            }
+            patch.lat = null;
+            patch.lon = null;
+          } else if (geo.value) {
+            patch.lat = geo.value.lat;
+            patch.lon = geo.value.lon;
+            patch.x = Math.round(geoX(geo.value.lon) * 10) / 10;
+            patch.y = Math.round(geoY(geo.value.lat) * 10) / 10;
+          } else {
+            patch.lat = null;
+            patch.lon = null;
+          }
+          update(p.id, patch);
+          cardMode = "view";
+          renderCard();
+        };
+
+        return h(
+          "div",
+          { class: "form", onclick: (e) => e.stopPropagation() },
+          h("label", { text: "Name" }),
+          nameIn,
+          h("label", { text: "Belgian municipality" }),
+          h("div", { class: "acwrap" }, muniIn, sug),
+          h("label", { text: "City, Country (For non Belgians)" }),
+          locIn,
+          geoFields,
+          h(
+            "div",
+            { class: "row-btns" },
+            h("button", { class: "btn primary", text: "Done", onclick: save }),
+            placePinBtn,
+            h("button", {
+              class: "btn ghost",
+              text: "Cancel",
+              onclick: () => {
+                cardMode = "view";
+                renderCard();
+              },
+            }),
+          ),
+        );
+      }
+
+      /*placement mode*/
+      function startPlacing(msg, cb) {
+        placing = { cb };
+        mapEl.classList.add("placing");
+        const b = $("#banner");
+        b.hidden = false;
+        b.replaceChildren(
+          h("span", { text: msg }),
+          h("button", { class: "btn", text: "Cancel", onclick: endPlacing }),
+        );
+      }
+      function endPlacing() {
+        placing = null;
+        mapEl.classList.remove("placing");
+        $("#banner").hidden = true;
+      }
+
+      /*autocomplete*/
+      function searchMuni(q, limit = 8) {
+        const nq = norm(q);
+        if (!nq) return [];
+        const toks = nq.split(" ");
+        const out = [];
+        for (const m of MUNI) {
+          if (!toks.every((t) => m.k.includes(t))) continue;
+          out.push([m.k.startsWith(nq) ? 0 : 1, m]);
+        }
+        return out
+          .sort((a, b) => a[0] - b[0] || a[1].n.localeCompare(b[1].n))
+          .slice(0, limit)
+          .map((x) => x[1]);
+      }
+      function autocomplete(input, list, onPick) {
+        let items = [],
+          idx = -1;
+        const draw = () => {
+          list.replaceChildren(
+            ...items.map((m, i) =>
+              h(
+                "li",
+                {
+                  class: i === idx ? "on" : "",
+                  onmousedown: (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    pick(m);
+                  },
+                },
+                h("span", { text: m.n }),
+                h("small", { text: PROV[m.p].n }),
+              ),
+            ),
+          );
+          list.hidden = !items.length;
+        };
+        const pick = (m) => {
+          input.value = m.n;
+          items = [];
+          draw();
+          onPick(m);
+        };
+        input.addEventListener("input", () => {
+          items = searchMuni(input.value);
+          idx = items.length ? 0 : -1;
+          draw();
+          onPick(null);
+        });
+        input.addEventListener("focus", () => {
+          if (input.value && !items.length) {
+            items = searchMuni(input.value);
+            idx = items.length ? 0 : -1;
+            draw();
+          }
+        });
+        input.addEventListener("blur", () =>
+          setTimeout(() => {
+            items = [];
+            draw();
+          }, 200),
+        );
+        input.addEventListener("keydown", (e) => {
+          if (!items.length) return;
+          if (e.key === "ArrowDown") {
+            idx = (idx + 1) % items.length;
+            draw();
+            e.preventDefault();
+          } else if (e.key === "ArrowUp") {
+            idx = (idx - 1 + items.length) % items.length;
+            draw();
+            e.preventDefault();
+          } else if (e.key === "Enter") {
+            pick(items[idx]);
+            e.preventDefault();
+          }
+        });
+      }
+
+      /*editing operations*/
+      function changed() {
+        syncLabels();
+        paintLabels();
+        refreshCount();
+        renderPeopleList();
+        renderRightSide();
+        if (selId && !byId(selId)) selId = null;
+        renderCard();
+        schedule();
+      }
+      async function update(id, patch) {
+        const p = byId(id);
+        if (!p) return;
+        Object.assign(p, patch);
+        changed();
+        if (isAdmin) {
+          const { error } = await supabase
+            .from("belgium_people")
+            .update(patch)
+            .eq("id", id);
+          if (error) toast("Error updating person");
+        }
+      }
+      async function addPerson(name, m, x, y, loc, geo = null) {
+        const px = geo ? geoX(geo.lon) : Number(x),
+          py = geo ? geoY(geo.lat) : Number(y);
+        const p = {
+          id: newId(),
+          n: name,
+          x: Number.isFinite(px) ? Math.round(px * 10) / 10 : null,
+          y: Number.isFinite(py) ? Math.round(py * 10) / 10 : null,
+          m: m || "",
+          loc: loc || "",
+          lat: geo ? geo.lat : null,
+          lon: geo ? geo.lon : null,
+        };
+        people.push(p);
+        changed();
+        select(p.id, { fly: true });
+        if (isAdmin) {
+          const { error } = await supabase.from("belgium_people").insert([p]);
+          if (error) toast("Error creating person");
+        }
+        return p;
+      }
+      async function removePerson(id) {
+        const i = people.findIndex((p) => p.id === id);
+        if (i < 0) return;
+        people.splice(i, 1);
+        selId = null;
+        cardMode = "view";
+        changed();
+        toast("Person removed");
+        if (isAdmin) {
+          const { error } = await supabase
+            .from("belgium_people")
+            .delete()
+            .eq("id", id);
+          if (error) toast("Error deleting person");
+        }
+      }
+      function refreshCount() {
+        $("#count").textContent =
+          people.length === 1 ? "1 person" : people.length + " people";
+      }
+
+      /*Left Sidebar (People) & Right Sidebar (Places)*/
+      const sideL = $("#sideL"),
+        sideR = $("#sideR"),
+        panePeople = $("#panePeople"),
+        panePlaces = $("#panePlaces"),
+        paneDetail = $("#paneDetail");
+      $("#btnMenu").onclick = () => {
+        sideL.classList.add("open");
+        $("#scrim").classList.add("on");
+      };
+      $("#scrim").onclick = () => {
+        sideL.classList.remove("open");
+        $("#scrim").classList.remove("on");
+      };
+
+      const regionDot = (r) =>
+        h("i", {
+          class: "dot",
+          style: `background:${r ? REGION_VAR[r] : "var(--ab)"}`,
+        });
+      function personRow(p) {
+        return h(
+          "button",
+          {
+            class: "row" + (p.id === selId ? " on" : ""),
+            type: "button",
+            onclick: () => select(p.id, { fly: true }),
+            onpointerenter: () => {
+              hoverId = p.id;
+              paintLabels();
+            },
+            onpointerleave: () => {
+              hoverId = null;
+              paintLabels();
+            },
+          },
+          regionDot(regionOf(p)),
+          h(
+            "span",
+            { class: "rn" },
+            h("b", { class: "hand", text: p.n }),
+            h("small", { text: placeText(p) }),
+          ),
+        );
+      }
+      const emptyMsg = (t) => h("p", { class: "empty", text: t });
+
+      /*Left Sidebar (People)*/
+      function buildPeople() {
+        panePeople.replaceChildren(
+          h(
+            "div",
+            { class: "pad" },
+            h(
+              "div",
+              { class: "searchbox" },
+              svgIcon(ICON.search, 15),
+              h("input", {
+                type: "search",
+                id: "qPeople",
+                placeholder: "Search people or town...",
+                autocomplete: "off",
+                oninput: (e) => {
+                  ui.qPeople = e.target.value;
+                  renderPeopleList();
+                },
+              }),
+            ),
+            h(
+              "div",
+              { class: "seg small" },
+              h("button", {
+                id: "gAz",
+                text: "A–Z",
+                onclick: () => {
+                  ui.group = "az";
+                  renderPeopleList();
+                },
+              }),
+              h("button", {
+                id: "gProv",
+                text: "By province",
+                onclick: () => {
+                  ui.group = "prov";
+                  renderPeopleList();
+                },
+              }),
+            ),
+          ),
+          h("div", { class: "list", id: "listPeople" }),
+          h(
+            "div",
+            { class: "pad foot" },
+            h("button", {
+              class: "btn",
+              text: "Copy list",
+              onclick: copyNames,
+            }),
+            h("button", { class: "btn", text: "CSV", onclick: downloadCsv }),
+          ),
+        );
+      }
+
+      function renderPeopleList() {
+        const list = $("#listPeople");
+        if (!list) return;
+        const gAz = $("#gAz"),
+          gProv = $("#gProv");
+        if (gAz) gAz.classList.toggle("on", ui.group === "az");
+        if (gProv) gProv.classList.toggle("on", ui.group === "prov");
+        list.classList.toggle("az-list", ui.group === "az");
+
+        const q = norm(ui.qPeople);
+        const arr = people
+          .filter(
+            (p) =>
+              !q ||
+              norm(p.n).includes(q) ||
+              (muniOf(p) && norm(muniOf(p).n).includes(q)) ||
+              (p.loc && norm(p.loc).includes(q)),
+          )
+          .sort(sortName);
+        if (!arr.length) {
+          list.replaceChildren(
+            emptyMsg(
+              q ? `No names match “${ui.qPeople}”.` : "Nobody on the map yet.",
+            ),
+          );
+          return;
+        }
+        if (ui.group === "az") {
+          const sections = new Map();
+          for (const p of arr) {
+            const first = Array.from(String(p.n || "").trim())[0] || "#";
+            const letter = /\p{L}/u.test(first)
+              ? first.toLocaleUpperCase()
+              : "#";
+            if (!sections.has(letter)) sections.set(letter, []);
+            sections.get(letter).push(p);
+          }
+          const nodes = [];
+          for (const [letter, ps] of sections) {
+            nodes.push(
+              h(
+                "div",
+                { class: "gh az-letter" },
+                h("span", { text: letter }),
+                h("span", { text: ps.length }),
+              ),
+            );
+            nodes.push(...ps.map(personRow));
+          }
+          list.replaceChildren(...nodes);
+          return;
+        }
+
+        const groups = PROV_ORDER.map((k) => [
+          k,
+          arr.filter((p) => provOf(p) === k),
+        ]).filter((g) => g[1].length);
+        const abroad = arr.filter((p) => isOutsideBelgium(p));
+        const nodes = [];
+        for (const [k, ps] of groups) {
+          nodes.push(
+            h(
+              "div",
+              { class: "gh" },
+              h("button", {
+                class: "link",
+                type: "button",
+                text: PROV[k].n,
+                onclick: () => openDetail({ t: "prov", k }),
+              }),
+              h("span", { text: ps.length }),
+            ),
+          );
+          nodes.push(...ps.map(personRow));
+        }
+        if (abroad.length) {
+          nodes.push(
+            h(
+              "div",
+              { class: "gh" },
+              h("span", { text: "Outside Belgium" }),
+              h("span", { text: abroad.length }),
+            ),
+          );
+          nodes.push(...abroad.map(personRow));
+        }
+        list.replaceChildren(...nodes);
+      }
+
+      function copyNames() {
+        const txt = people
+          .slice()
+          .sort(sortName)
+          .map((p) => `${p.n} (${p.m || "Outside Belgium"})`)
+          .join("\n");
+        const done = () => toast("Names copied to clipboard");
+        const fallback = () => {
+          const ta = h("textarea", { class: "sr", readonly: "" });
+          ta.value = txt;
+          document.body.append(ta);
+          ta.select();
+          try {
+            document.execCommand("copy");
+            done();
+          } catch (_) {
+            toast("Could not copy names automatically.");
+          }
+          ta.remove();
+        };
+        try {
+          navigator.clipboard.writeText(txt).then(done, fallback);
+        } catch (_) {
+          fallback();
+        }
+      }
+
+      function downloadCsv() {
+        const q = (s) => '"' + String(s).replace(/"/g, '""') + '"';
+        const rows = [
+          ["Name", "Municipality", "Province", "Region"].map(q).join(","),
+        ];
+        for (const p of people.slice().sort(sortName)) {
+          const m = muniOf(p);
+          rows.push(
+            [
+              p.n,
+              m ? m.n : "Outside Belgium",
+              m ? PROV[m.p].n : "",
+              regionOf(p),
+            ]
+              .map(q)
+              .join(","),
+          );
+        }
+        const blob = new Blob(["\uFEFF" + rows.join("\n")], {
+          type: "text/csv;charset=utf-8;",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = h("a", { href: url, download: "geoguessr-gelgium-map.csv" });
+        document.body.append(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        toast("CSV file downloaded");
+      }
+
+      /*Right Sidebar (Places & Municipalities)*/
+      function buildPlaces() {
+        panePlaces.replaceChildren(
+          h(
+            "div",
+            { class: "pad" },
+            h(
+              "div",
+              { class: "seg" },
+              h("button", {
+                id: "sProv",
+                type: "button",
+                text: "Provinces",
+                onclick: () => {
+                  ui.sub = "prov";
+                  renderRightSide();
+                },
+              }),
+              h("button", {
+                id: "sMuni",
+                type: "button",
+                text: "Municipalities",
+                onclick: () => {
+                  ui.sub = "muni";
+                  renderRightSide();
+                },
+              }),
+            ),
+          ),
+          h("div", { id: "placesBody", class: "pbody" }),
+        );
+      }
+
+      function renderPlacesList() {
+        const sProv = $("#sProv"),
+          sMuni = $("#sMuni");
+        if (sProv) sProv.classList.toggle("on", ui.sub === "prov");
+        if (sMuni) sMuni.classList.toggle("on", ui.sub === "muni");
+
+        const body = $("#placesBody");
+        if (ui.sub === "prov") {
+          const cnt = countBy((p) => provOf(p)),
+            nodes = [];
+          for (const r of ["Flanders", "Brussels", "Wallonia"]) {
+            const ks = PROV_ORDER.filter((k) => PROV[k].r === r);
+            nodes.push(
+              h(
+                "div",
+                { class: "gh" },
+                h("span", {
+                  text: r === "Brussels" ? "Brussels-Capital Region" : r,
+                }),
+                h("span", {
+                  text: ks.reduce((a, k) => a + (cnt.get(k) || 0), 0),
+                }),
+              ),
+            );
+            for (const k of ks) {
+              nodes.push(
+                h(
+                  "button",
+                  {
+                    class: "row",
+                    type: "button",
+                    onclick: () => openDetail({ t: "prov", k }),
+                  },
+                  regionDot(r),
+                  h(
+                    "span",
+                    { class: "rn" },
+                    h("b", { text: PROV[k].n }),
+                    h("small", {
+                      text:
+                        MUNI.filter((m) => m.p === k).length +
+                        " municipalities",
+                    }),
+                  ),
+                  h("span", { class: "cnt", text: cnt.get(k) || 0 }),
+                ),
+              );
+            }
+          }
+          body.replaceChildren(h("div", { class: "list" }, ...nodes));
+          return;
+        }
+
+        const sel = h(
+          "select",
+          {
+            id: "provFilter",
+            "aria-label": "Filter by province",
+            onchange: (e) => {
+              ui.provFilter = e.target.value;
+              renderMuniList();
+            },
+          },
+          h("option", { value: "", text: "All provinces" }),
+          ...PROV_ORDER.map((k) => h("option", { value: k, text: PROV[k].n })),
+        );
+        sel.value = ui.provFilter;
+        const qin = h("input", {
+          type: "search",
+          id: "qMuni",
+          placeholder: "Search municipality...",
+          autocomplete: "off",
+          value: ui.qMuni,
+          oninput: (e) => {
+            ui.qMuni = e.target.value;
+            renderMuniList();
+          },
+        });
+
+        body.replaceChildren(
+          h(
+            "div",
+            { class: "pad" },
+            h("div", { class: "searchbox" }, svgIcon(ICON.search, 15), qin),
+            h(
+              "div",
+              { class: "filters" },
+              sel,
+              h(
+                "label",
+                { class: "chk" },
+                h("input", {
+                  type: "checkbox",
+                  checked: ui.onlyWith ? "" : null,
+                  onchange: (e) => {
+                    ui.onlyWith = e.target.checked;
+                    renderMuniList();
+                  },
+                }),
+                " Only with people",
+              ),
+            ),
+          ),
+          h("div", { class: "list", id: "listMuni" }),
+        );
+        renderMuniList();
+      }
+
+      function renderMuniList() {
+        const list = $("#listMuni");
+        if (!list) return;
+        const cnt = countBy((p) => p.m),
+          q = norm(ui.qMuni);
+        let arr = q
+          ? searchMuni(ui.qMuni, 500)
+          : MUNI.slice().sort((a, b) => a.n.localeCompare(b.n));
+        if (ui.provFilter) arr = arr.filter((m) => m.p === ui.provFilter);
+        if (ui.onlyWith) arr = arr.filter((m) => cnt.get(m.n));
+        if (!arr.length) {
+          list.replaceChildren(
+            emptyMsg(
+              ui.onlyWith
+                ? "No municipalities with people match."
+                : `No municipality matches “${ui.qMuni}”.`,
+            ),
+          );
+          return;
+        }
+        list.replaceChildren(
+          ...arr.map((m) =>
+            h(
+              "button",
+              {
+                class: "row",
+                type: "button",
+                onclick: () => openDetail({ t: "muni", k: m.n }),
+              },
+              regionDot(PROV[m.p].r),
+              h(
+                "span",
+                { class: "rn" },
+                h("b", { text: m.n }),
+                h("small", {
+                  text:
+                    PROV[m.p].n + (m.al.length ? " · " + m.al.join(", ") : ""),
+                }),
+              ),
+              cnt.get(m.n)
+                ? h("span", { class: "cnt", text: cnt.get(m.n) })
+                : null,
+            ),
+          ),
+        );
+      }
+
+      function openDetail(d) {
+        ui.detail = d;
+        ui.qDetail = "";
+        renderRightSide();
+        paintLabels();
+        sideR.classList.add("open");
+        sideL.classList.remove("open");
+        if (d.t === "prov") {
+          const ms = MUNI.filter((m) => m.p === d.k);
+          fitBounds(
+            Math.min(...ms.map((m) => m.x)),
+            Math.min(...ms.map((m) => m.y)),
+            Math.max(...ms.map((m) => m.x)),
+            Math.max(...ms.map((m) => m.y)),
+            0.35,
+          );
+        } else {
+          const m = muniByName.get(d.k);
+          if (m) flyTo(m.x, m.y, 6.5);
+        }
+      }
+      function closeDetail() {
+        ui.detail = null;
+        renderRightSide();
+        paintLabels();
+      }
+
+      function renderDetailList() {
+        const d = ui.detail;
+        if (!d) return;
+        const list = $("#detailList");
+        if (!list) return;
+        const isProv = d.t === "prov";
+        const inside = people
+          .filter((p) => (isProv ? provOf(p) === d.k : p.m === d.k))
+          .sort(sortName);
+        const q = norm(ui.qDetail),
+          shown = inside.filter((p) => !q || norm(p.n).includes(q));
+        const nodes = [];
+        if (!inside.length)
+          nodes.push(
+            emptyMsg(
+              isProv ? "Nobody in this province yet." : "Nobody here yet.",
+            ),
+          );
+        else if (!shown.length)
+          nodes.push(emptyMsg(`No names match “${ui.qDetail}”.`));
+        else nodes.push(...shown.map(personRow));
+
+        if (isProv) {
+          const cnt = countBy((p) => p.m),
+            ms = MUNI.filter((m) => m.p === d.k && cnt.get(m.n)).sort(
+              (a, b) => cnt.get(b.n) - cnt.get(a.n),
+            );
+          if (ms.length) {
+            nodes.push(
+              h(
+                "div",
+                { class: "gh" },
+                h("span", { text: "Municipalities with people" }),
+                h("span", { text: ms.length }),
+              ),
+            );
+            nodes.push(
+              ...ms.map((m) =>
+                h(
+                  "button",
+                  {
+                    class: "row",
+                    type: "button",
+                    onclick: () => openDetail({ t: "muni", k: m.n }),
+                  },
+                  h("span", { class: "rn" }, h("b", { text: m.n })),
+                  h("span", { class: "cnt", text: cnt.get(m.n) }),
+                ),
+              ),
+            );
+          }
+        } else {
+          if (isAdmin) {
+            nodes.push(
+              h(
+                "div",
+                { class: "pad" },
+                h(
+                  "button",
+                  {
+                    class: "btn primary",
+                    type: "button",
+                    onclick: () => openAdd(muniByName.get(d.k)),
+                  },
+                  svgIcon(ICON.plus, 15),
+                  " Add someone here",
+                ),
+              ),
+            );
+          }
+        }
+        list.replaceChildren(...nodes);
+      }
+
+      function renderRightSide() {
+        const det = !!ui.detail;
+        paneDetail.hidden = !det;
+        panePlaces.hidden = det;
+        if (det) {
+          const d = ui.detail;
+          const isProv = d.t === "prov",
+            m = isProv ? null : muniByName.get(d.k);
+          const inside = people.filter((p) =>
+            isProv ? provOf(p) === d.k : p.m === d.k,
+          );
+          const title = isProv ? PROV[d.k].n : m.n,
+            sub = isProv
+              ? `${PROV[d.k].r} · ${MUNI.filter((x) => x.p === d.k).length} towns`
+              : `${PROV[m.p].n} · ${PROV[m.p].r}`;
+          paneDetail.replaceChildren(
+            h(
+              "div",
+              { class: "dh pad" },
+              h(
+                "button",
+                {
+                  class: "icon-btn sm",
+                  type: "button",
+                  "aria-label": "Back",
+                  onclick: closeDetail,
+                },
+                svgIcon(ICON.back, 16),
+              ),
+              h(
+                "div",
+                {},
+                h("div", { class: "dt", text: title }),
+                h("div", { class: "ds", text: sub }),
+              ),
+              h("span", { class: "cnt big", text: inside.length }),
+            ),
+            // Always show the search box, including when the place has four or fewer people.
+            h(
+              "div",
+              { class: "pad" },
+              h(
+                "div",
+                { class: "searchbox" },
+                svgIcon(ICON.search, 15),
+                h("input", {
+                  type: "search",
+                  placeholder: `Search in ${title}...`,
+                  autocomplete: "off",
+                  value: ui.qDetail,
+                  oninput: (e) => {
+                    ui.qDetail = e.target.value;
+                    renderDetailList();
+                  },
+                }),
+              ),
+            ),
+            h("div", { class: "list", id: "detailList" }),
+          );
+          renderDetailList();
+        } else {
+          renderPlacesList();
+        }
+      }
+
+      /*admin & dialogs*/
+      function setAdminState(adminActive) {
+        isAdmin = adminActive;
+        $("#btnAuth").hidden = adminActive;
+        $("#btnAdd").hidden = !adminActive;
+        $("#btnLogout").hidden = !adminActive;
+        renderCard();
+        renderRightSide();
+      }
+
+      $("#btnLogout").onclick = async () => {
+        await supabase.auth.signOut();
+        setAdminState(false);
+        toast("Signed out from Edit Mode");
+      };
+
+      $("#btnAuth").onclick = () => {
+        if (isAdmin) return toast("Already in Edit Mode");
+        const wrap = $("#dlgwrap");
+        wrap.hidden = false;
+        const passIn = h("input", {
+          type: "password",
+          placeholder: "Admin Password",
+          autocomplete: "off",
+        });
+        const err = h("p", { class: "err", hidden: true });
+        const close = () => {
+          wrap.hidden = true;
+          wrap.replaceChildren();
+        };
+
+        const submit = async () => {
+          try {
+            const { error } = await supabase.auth.signInWithPassword({
+              email: "admin@belgiummap.local",
+              password: passIn.value,
+            });
+            if (error) throw error;
+            setAdminState(true);
+            close();
+            toast("Edit Mode Unlocked");
+          } catch (e) {
+            err.textContent = "Incorrect password.";
+            err.hidden = false;
+            passIn.value = "";
+            passIn.focus();
+          }
+        };
+
+        passIn.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") submit();
+        });
+        wrap.replaceChildren(
+          h("div", { class: "dlg-bg", onclick: close }),
+          h(
+            "div",
+            { class: "dlg", role: "dialog" },
+            h("h2", { text: "Admin Login" }),
+            passIn,
+            err,
+            h(
+              "div",
+              { class: "row-btns" },
+              h("button", {
+                class: "btn primary",
+                text: "Unlock",
+                onclick: submit,
+              }),
+              h("button", {
+                class: "btn ghost",
+                text: "Cancel",
+                onclick: close,
+              }),
+            ),
+          ),
+        );
+        setTimeout(() => passIn.focus(), 0);
+      };
+
+      function openAdd(preMuni) {
+        const wrap = $("#dlgwrap");
+        wrap.hidden = false;
+        let picked = preMuni || null;
+        const nameIn = h("input", {
+          type: "text",
+          maxlength: "40",
+          placeholder: "e.g. Sam",
+          autocomplete: "off",
+        });
+        const muniIn = h("input", {
+          type: "text",
+          placeholder: "Belgian municipality (leave empty for abroad)",
+          value: picked ? picked.n : "",
+          autocomplete: "off",
+        });
+        const locIn = h("input", {
+          type: "text",
+          placeholder: "City, Country (e.g. Ulft, Netherlands)",
+          autocomplete: "off",
+        });
+        const latIn = h("input", {
+          type: "number",
+          step: "any",
+          placeholder: "e.g. 51.8910",
+        });
+        const lonIn = h("input", {
+          type: "number",
+          step: "any",
+          placeholder: "e.g. 6.3843",
+        });
+        const geoFields = h(
+          "div",
+          { class: "geo-fields", hidden: true },
+          h("label", { text: "Latitude" }),
+          latIn,
+          h("label", { text: "Longitude" }),
+          lonIn,
+        );
+        const sug = h("ul", { class: "sug", hidden: true });
+        const err = h("p", { class: "err", hidden: true });
+        const close = () => {
+          wrap.hidden = true;
+          wrap.replaceChildren();
+        };
+        const fail = (t) => {
+          err.textContent = t;
+          err.hidden = false;
+        };
+        const placePinBtn = h("button", {
+          class: "btn",
+          type: "button",
+          text: "Place pin on map",
+          onclick: () => {
+            const n = nameIn.value.trim();
+            if (!n) {
+              fail("Enter a name first.");
+              nameIn.focus();
+              return;
+            }
+            const typed = norm(muniIn.value);
+            if (typed && (!picked || norm(picked.n) !== typed)) {
+              const exact = MUNI.find(
+                (q) =>
+                  norm(q.n) === typed || q.al.some((a) => norm(a) === typed),
+              );
+              if (exact) picked = exact;
+              else {
+                fail(
+                  "Unknown Belgian municipality. Leave this field empty for an international city.",
+                );
+                return;
+              }
+            }
+            if (!typed) picked = null;
+            const loc = locIn.value.trim();
+            const international = isInternationalCityCountry(loc, picked);
+            const geo = parseGeoInputs(latIn.value, lonIn.value);
+            if (geo.error) {
+              fail(geo.error);
+              return;
+            }
+            if (international) {
+              if (!geo.value) {
+                fail(
+                  "Enter the latitude and longitude for this international city.",
+                );
+                latIn.focus();
+                return;
+              }
+              close();
+              addPerson(n, "", null, null, loc, geo.value);
+              return;
+            }
+            close();
+            startPlacing(`Click map to place ${n}.`, (x, y) => {
+              const placement = placementForBelgianMapPoint(x, y, loc);
+              addPerson(
+                n,
+                placement.m,
+                placement.x,
+                placement.y,
+                placement.loc,
+              );
+            });
+          },
+        });
+        const syncGeoVisibility = () => {
+          const international = isInternationalCityCountry(locIn.value, picked);
+          geoFields.hidden = !international;
+          placePinBtn.hidden = international;
+        };
+        autocomplete(muniIn, sug, (m) => {
+          picked = m;
+          syncGeoVisibility();
+        });
+        muniIn.addEventListener("input", syncGeoVisibility);
+        locIn.addEventListener("input", syncGeoVisibility);
+
+        const submit = () => {
+          const n = nameIn.value.trim();
+          err.hidden = true;
+          if (!n) {
+            fail("Enter a name.");
+            nameIn.focus();
+            return;
+          }
+          const typed = norm(muniIn.value);
+          if (typed && (!picked || norm(picked.n) !== typed)) {
+            const exact = MUNI.find(
+              (q) => norm(q.n) === typed || q.al.some((a) => norm(a) === typed),
+            );
+            if (exact) picked = exact;
+            else {
+              fail(
+                "Unknown Belgian municipality. Leave this field empty for an international city.",
+              );
+              return;
+            }
+          }
+          if (!typed) picked = null;
+
+          const loc = locIn.value.trim();
+          const international = isInternationalCityCountry(loc, picked);
+          const geo = parseGeoInputs(latIn.value, lonIn.value);
+          if (geo.error) {
+            fail(geo.error);
+            return;
+          }
+          if (international) {
+            if (!geo.value) {
+              fail(
+                "Enter the latitude and longitude for this international city.",
+              );
+              latIn.focus();
+              return;
+            }
+            close();
+            addPerson(n, "", null, null, loc, geo.value);
+            return;
+          }
+          if (picked) {
+            close();
+            addPerson(n, picked.n, picked.x, picked.y, loc);
+          } else if (geo.value) {
+            if (!loc) {
+              fail("Enter the city and country for these coordinates.");
+              locIn.focus();
+              return;
+            }
+            close();
+            addPerson(n, "", null, null, loc, geo.value);
+          } else {
+            close();
+            startPlacing(`Click map to place ${n}.`, (x, y) => {
+              const placement = placementForBelgianMapPoint(x, y, loc);
+              addPerson(
+                n,
+                placement.m,
+                placement.x,
+                placement.y,
+                placement.loc,
+              );
+            });
+          }
+        };
+
+        [nameIn, muniIn, locIn, latIn, lonIn].forEach((i) =>
+          i.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") submit();
+          }),
+        );
+        syncGeoVisibility();
+        wrap.replaceChildren(
+          h("div", { class: "dlg-bg", onclick: close }),
+          h(
+            "div",
+            { class: "dlg", role: "dialog" },
+            h("h2", { text: "Add a person" }),
+            h("label", { text: "Name" }),
+            nameIn,
+            h("label", {
+              text: "Belgian municipality (leave empty for abroad)",
+            }),
+            h("div", { class: "acwrap" }, muniIn, sug),
+            h("label", { text: "City / Country" }),
+            locIn,
+            geoFields,
+            err,
+            h(
+              "div",
+              { class: "row-btns" },
+              h("button", {
+                class: "btn primary",
+                text: "Continue",
+                onclick: submit,
+              }),
+              placePinBtn,
+              h("button", {
+                class: "btn ghost",
+                text: "Cancel",
+                onclick: close,
+              }),
+            ),
+          ),
+        );
+        setTimeout(() => nameIn.focus(), 0);
+      }
+      $("#btnAdd").onclick = () => openAdd(null);
+
+      /*init*/
+      supabase.auth
+        .getSession()
+        .then((res) => {
+          const session = res?.data?.session;
+          if (session) setAdminState(true);
+        })
+        .catch((err) => console.error("Session fetch failed", err));
+
+      supabase
+        .channel("public:belgium_people")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "belgium_people" },
+          (payload) => {
+            if (payload.eventType === "INSERT") {
+              if (!byId(payload.new.id)) people.push(payload.new);
+            } else if (payload.eventType === "UPDATE") {
+              const p = byId(payload.new.id);
+              if (p) Object.assign(p, payload.new);
+            } else if (payload.eventType === "DELETE") {
+              const i = people.findIndex((x) => x.id === payload.old.id);
+              if (i >= 0) people.splice(i, 1);
+            }
+            changed();
+          },
+        )
+        .subscribe();
+
+      supabase
+        .from("belgium_people")
+        .select("*")
+        .then(({ data, error }) => {
+          if (error) console.error("Error fetching people", error);
+          if (data && data.length) {
+            people = data.map((p) => {
+              const m = muniOf(p);
+              if (m) {
+                p.x = m.x;
+                p.y = m.y;
+              } else if (hasGeoCoordinates(p)) {
+                const position = mapPosition(p);
+                p.x = position.x;
+                p.y = position.y;
+              }
+              return p;
+            });
+            changed();
+          }
+        })
+        .catch((err) => console.error(err));
+
+      buildPeople();
+      buildPlaces();
+      syncLabels();
+      refreshCount();
+      renderPeopleList();
+      renderRightSide();
+      paintLabels();
+      new ResizeObserver(() => measure()).observe(mapEl);
+      measure();
+      if (document.fonts) document.fonts.ready.then(() => schedule());
+      render();
+    </script>
+  </body>
+</html>
