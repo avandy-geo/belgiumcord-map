@@ -180,8 +180,10 @@
         z-index: 20;
         backdrop-filter: blur(1px);
       }
-      .scrim.on {
-        display: block;
+      @media (max-width: 960px) {
+        .scrim.on {
+          display: block;
+        }
       }
 
       .pane {
@@ -625,9 +627,74 @@
       .menu-btn {
         display: none;
       }
+      /* Mobile-only edge tabs that ride on the inner edge of each sidebar */
+      .side-tab {
+        display: none;
+      }
       @media (max-width: 960px) {
+        .side-tab {
+          position: absolute;
+          top: 50%;
+          margin-top: -44px;
+          width: 30px;
+          height: 88px;
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          background: #6b7280;
+          color: #ffffff;
+          border: 1px solid #4b5563;
+          cursor: pointer;
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+          font-family: var(--hand);
+          font-weight: 800;
+          font-size: 11px;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .side-tab .tab-lbl {
+          writing-mode: vertical-rl;
+          line-height: 1;
+        }
+        .side-tab svg {
+          transition: transform 0.25s;
+        }
+        .side-tab-left {
+          left: 100%;
+          border-left: none;
+          border-radius: 0 12px 12px 0;
+        }
+        .side-tab-right {
+          right: 100%;
+          border-right: none;
+          border-radius: 12px 0 0 12px;
+        }
+        /* chevron points the way the panel will move */
+        .side-tab-left svg {
+          transform: rotate(180deg);
+        }
+        .side-tab-left[aria-expanded="true"] svg {
+          transform: rotate(0deg);
+        }
+        .side-tab-right[aria-expanded="true"] svg {
+          transform: rotate(180deg);
+        }
+        .side-tab:active {
+          background: #4b5563;
+        }
+        /* the old header menu button is replaced by the left tab */
         .menu-btn {
-          display: inline-flex;
+          display: none;
+        }
+        #card {
+          bottom: 12px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: min(340px, calc(100% - 84px));
         }
       }
 
@@ -1708,6 +1775,18 @@
             { id: "sideL", class: "side-left" },
             h("div", { class: "side-hdr" }, h("span", { text: "People" })),
             h("div", { class: "pane", id: "panePeople" }),
+            h(
+              "button",
+              {
+                class: "side-tab side-tab-left",
+                id: "tabL",
+                type: "button",
+                "aria-label": "Toggle people list",
+                "aria-expanded": "false",
+              },
+              svgIcon(ICON.back, 16),
+              h("span", { class: "tab-lbl", text: "People" }),
+            ),
           ),
           h("div", { class: "scrim", id: "scrim" }),
           h(
@@ -1779,6 +1858,18 @@
             ),
             h("div", { class: "pane", id: "paneDetail", hidden: true }),
             h("div", { class: "pane", id: "panePlaces" }),
+            h(
+              "button",
+              {
+                class: "side-tab side-tab-right",
+                id: "tabR",
+                type: "button",
+                "aria-label": "Toggle places list",
+                "aria-expanded": "false",
+              },
+              svgIcon(ICON.back, 16),
+              h("span", { class: "tab-lbl", text: "Places" }),
+            ),
           ),
         ),
         h("div", { id: "toast", hidden: true }),
@@ -2867,13 +2958,42 @@
         panePeople = $("#panePeople"),
         panePlaces = $("#panePlaces"),
         paneDetail = $("#paneDetail");
-      $("#btnMenu").onclick = () => {
-        sideL.classList.add("open");
-        $("#scrim").classList.add("on");
+      // Mobile drawers: only one open at a time; the edge tabs ride on each drawer.
+      const mobileMQ = matchMedia("(max-width: 960px)");
+      function setSide(which, open) {
+        const el = which === "L" ? sideL : sideR,
+          other = which === "L" ? sideR : sideL;
+        el.classList.toggle("open", open);
+        if (open) other.classList.remove("open");
+        syncSideUi();
+      }
+      function syncSideUi() {
+        const l = sideL.classList.contains("open"),
+          r = sideR.classList.contains("open");
+        $("#scrim").classList.toggle("on", l || r);
+        $("#tabL").setAttribute("aria-expanded", String(l));
+        $("#tabR").setAttribute("aria-expanded", String(r));
+      }
+      function closeSidesOnMobile() {
+        if (mobileMQ.matches) {
+          sideL.classList.remove("open");
+          sideR.classList.remove("open");
+          syncSideUi();
+        }
+      }
+      $("#btnMenu").onclick = () => setSide("L", true);
+      $("#tabL").onclick = (e) => {
+        e.stopPropagation();
+        setSide("L", !sideL.classList.contains("open"));
+      };
+      $("#tabR").onclick = (e) => {
+        e.stopPropagation();
+        setSide("R", !sideR.classList.contains("open"));
       };
       $("#scrim").onclick = () => {
         sideL.classList.remove("open");
-        $("#scrim").classList.remove("on");
+        sideR.classList.remove("open");
+        syncSideUi();
       };
 
       const regionDot = (r) =>
@@ -2887,7 +3007,10 @@
           {
             class: "row" + (p.id === selId ? " on" : ""),
             type: "button",
-            onclick: () => select(p.id, { fly: true }),
+            onclick: () => {
+              closeSidesOnMobile();
+              select(p.id, { fly: true });
+            },
             onpointerenter: () => {
               hoverId = p.id;
               paintLabels();
@@ -3303,8 +3426,7 @@
         ui.qDetail = "";
         renderRightSide();
         paintLabels();
-        sideR.classList.add("open");
-        sideL.classList.remove("open");
+        setSide("R", true);
         if (d.t === "prov") {
           const ms = MUNI.filter((m) => m.p === d.k);
           fitBounds(
