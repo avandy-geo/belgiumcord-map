@@ -690,11 +690,24 @@
         .menu-btn {
           display: none;
         }
-        #card {
-          bottom: 12px;
+        /* #mapwrap prefix: the base #card rule comes later in the file and would otherwise win */
+        #mapwrap #card {
+          top: auto;
+          bottom: 16px;
           left: 50%;
+          right: auto;
           transform: translateX(-50%);
-          width: min(340px, calc(100% - 84px));
+          width: min(340px, calc(100% - 32px));
+          max-height: calc(100% - 32px);
+          overflow-y: auto;
+          z-index: 26;
+        }
+        /* mobile browsers: use the visible viewport so nothing hides under the toolbar */
+        html,
+        body,
+        #app {
+          height: 100vh;
+          height: 100dvh;
         }
       }
 
